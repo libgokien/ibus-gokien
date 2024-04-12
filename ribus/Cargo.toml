@@ -1,0 +1,12 @@
+[package]
+name = "ribus"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+libdbus-sys = "0.2.5"
+glib-sys.workspace = true
+gobject-sys.workspace = true
+tracing.workspace = true

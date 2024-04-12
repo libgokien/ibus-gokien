@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- filename: gokien.xml -->
+<component>
+	<name>org.freedesktop.IBus.Gokien</name>
+	<description>Gokien Component</description>
+	<version>0.1</version>
+	<license>GPLv3</license>
+	<author>Lzu Tao</author>
+	<homepage>to be defined</homepage>
+	<exec>/usr/libexec/ibus-engine-gokien --ibus</exec>
+	<textdomain>ibus-gokien</textdomain>
+	<engines>
+		<engine>
+			<name>gokien</name>
+			<longname>Gokien</longname>
+			<description>Vietnamese IME for IBus using Gokien Engine</description>
+			<language>vi</language>
+			<license>GPLv3</license>
+			<author>Lzu Tao</author>
+			<version>0.1</version>
+			<icon>/usr/share/icons/ibus-gokien.png</icon>
+			<layout>us</layout>
+			<hotkeys></hotkeys>
+			<rank>99</rank>
+			<!-- FIXME: really need to be hex code? -->
+			<symbol>&#x76;&#x69;</symbol>
+			<!-- <setup>/usr/libexec/ibus-engine-gokien --gui</setup> -->
+		</engine>
+	</engines>
+</component>

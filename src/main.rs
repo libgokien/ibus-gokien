@@ -1,146 +1,103 @@
-mod ffi;
-use ffi as c;
+#[cfg(windows)]
+compile_eror!("ibus is not supported on Windows");
 
-// we import the necessary modules (only the core X module in this application).
-use vi::telex::transform_buffer;
-use xcb::x;
+mod engine;
 
-fn main() -> xcb::Result<()> {
-    // Connect to the X server.
-    let (conn, screen_id) = xcb::Connection::connect(None)?;
+use std::borrow::Cow;
+use std::env;
+use std::ffi::{CStr, CString, OsStr};
+use std::path::{Path, PathBuf};
 
-    // Fetch the `x::Setup` and get the main `x::Screen` object.
-    let setup = conn.get_setup();
-    let screen = setup.roots().nth(screen_id as usize).unwrap();
+use argh::FromArgs;
+use engine::IBusGokienEngine;
+use ribus::{Bus, Component, Factory, NameFlag};
+use tracing::info;
 
-    eprintln!(
-        "Screen dimensions: {w}, {h}",
-        w = screen.width_in_pixels(),
-        h = screen.height_in_pixels()
-    );
+#[derive(FromArgs)]
+/// Reach new heights.
+struct Args {
+    /// whether to run as ibus-daemon
+    #[argh(switch)]
+    ibus: bool,
+    /// print version
+    #[argh(switch, short = 'v')]
+    version: bool,
+}
 
-    // Generate an `Xid` for the client window.
-    // The type inference is needed here.
-    let window: x::Window = conn.generate_id();
+fn main() {
+    // install global collector configured based on RUST_LOG env var.
+    tracing_subscriber::fmt::init();
 
-    // We can now create a window. For this we pass a `Request`
-    // object to the `send_request_checked` method. The method
-    // returns a cookie that will be used to check for success.
-    let cookie = conn.send_request_checked(&x::CreateWindow {
-        depth: x::COPY_FROM_PARENT as u8,
-        wid: window,
-        parent: screen.root(),
-        x: 0,
-        y: 0,
-        width: 150,
-        height: 150,
-        border_width: 0,
-        class: x::WindowClass::InputOutput,
-        visual: screen.root_visual(),
-        // this list must be in same order than `Cw` enum order
-        value_list: &[
-            x::Cw::BackPixel(screen.white_pixel()),
-            x::Cw::EventMask(x::EventMask::EXPOSURE | x::EventMask::KEY_PRESS),
-        ],
-    });
+    let args: Args = argh::from_env();
+    if args.version {
+        let prog_name = env!("CARGO_PKG_NAME");
+        let ver = env!("CARGO_PKG_VERSION");
+        eprintln!("{prog_name}-v{ver}");
+        return;
+    }
+    run(args.ibus);
+}
 
-    // We now check if the window creation worked.
-    // A cookie can't be cloned; it is moved to the function.
-    conn.check_request(cookie)?;
+fn get_engine_xml_path() -> Cow<'static, CStr> {
+    // first find in current executabe dir, then
+    // from `${{DATADIR}}/ibus/component`
+    static DEFAULT: &CStr = c"gokien.xml";
+    let default = unsafe { OsStr::from_encoded_bytes_unchecked(DEFAULT.to_bytes()) };
+    if Path::new(default).is_file() {
+        return DEFAULT.into();
+    }
+    let mut libdir = env::var_os("DATADIR").unwrap();
+    libdir.push("ibus/component");
+    libdir.push(default);
+    if PathBuf::from(&libdir).is_file() {
+        let v = libdir.into_encoded_bytes();
+        let s = unsafe { CString::from_vec_unchecked(v) };
+        return s.into();
+    }
+    panic!("impossible")
+}
 
-    // Let's change the window title
-    let cookie = conn.send_request_checked(&x::ChangeProperty {
-        mode: x::PropMode::Replace,
-        window,
-        property: x::ATOM_WM_NAME,
-        r#type: x::ATOM_STRING,
-        data: b"My XCB Window",
-    });
-    // And check for success again
-    conn.check_request(cookie)?;
+fn run(ibus: bool) {
+    let Some(bus) = Bus::new() else {
+        panic!("cannot connect to ibus deamon");
+    };
+    info!("bus = {:?}", bus.hello());
+    bus.register_disconnected_signal();
+    let file_path = get_engine_xml_path();
+    let component = Component::new_from_file(&*file_path);
+    // component.output();
+    let component_name = component.get_name();
+    info!(?component_name);
 
-    // We now show ("map" in X terminology) the window.
-    // This time we do not check for success, so we discard the cookie.
-    conn.send_request(&x::MapWindow { window });
-
-    // Previous request was checked, so a flush is not necessary in this case.
-    // Otherwise, here is how to perform a connection flush.
-    conn.flush()?;
-
-    let mut buf: Vec<char> = Vec::with_capacity(32);
-    let mut out = String::with_capacity(32);
-
-    #[repr(u32)]
-    enum Col {
-        Lower = 0,
-        Upper = 1,
+    let mut factory = Factory::new(&bus);
+    let engines = component.get_engines();
+    // let engines = bus.list_engines();
+    for e in engines {
+        let name = e.get_name();
+        info!("engine = {name:?}");
+        factory.add_engine(name, IBusGokienEngine::get_type());
+        // let _engine = factory.create_engine(name).unwrap();
     }
 
-    let key_symbols = unsafe { c::xcb_key_symbols_alloc(conn.get_raw_conn().cast()) };
-
-    // proceed with create_window and event loop...
-    // We enter the main event loop
-    loop {
-        match conn.wait_for_event()? {
-            xcb::Event::X(x::Event::Expose(expose)) => {
-                eprintln!("{:?} exposed. Region to be redrawn at location ({},{}), with dimension ({},{})",
-                    expose.window(), expose.x(), expose.y(), expose.width(), expose.height());
+    match ibus {
+        false => {
+            if !bus.register_component(&component) {
+                panic!("cannot register component to ibus deamon");
             }
-            xcb::Event::X(x::Event::KeyRelease(ev)) => {
-                eprintln!("Last key released: code (0x:{:04x}", ev.detail());
-                continue;
-            }
-            xcb::Event::X(x::Event::KeyPress(ev)) => {
-                let kcode = ev.detail();
-                dbg!(kcode);
-                let col = {
-                    let shift_on = ev.state().contains(x::KeyButMask::SHIFT);
-                    let caps_on = ev.state().contains(x::KeyButMask::LOCK);
-                    match (shift_on, caps_on) {
-                        (true, true) | (false, false) => Col::Lower,
-                        _other => Col::Upper,
-                    }
-                };
-
-                let ksym = unsafe { c::xcb_key_symbols_get_keysym(key_symbols, kcode, col as _) };
-
-                match ksym {
-                    // Latin-1 characters have the same representation.
-                    c::XK_A..=c::XK_Z | c::XK_a..=c::XK_z => {
-                        let c = char::from(ksym as u8);
-                        buf.push(c);
-                    }
-                    c::XK_space | c::XK_Return | 0 => {
-                        transform_buffer(buf.clone(), &mut out);
-                        dbg!(&out);
-                        buf.clear();
-                        out.clear();
-                    }
-                    c::XK_BackSpace => {
-                        buf.pop();
-                    }
-                    other => {
-                        eprintln!("ksym = 0x{:04X}", other);
-                    }
-                }
-            }
-            xcb::Event::X(x::Event::ClientMessage(ev)) => {
-                // We have received a message from the server
-                if let x::ClientMessageData::Data32([atom, ..]) = ev.data() {
-                    dbg!(atom);
-                }
-            }
-            xcb::Event::X(ev) => {
-                dbg!(ev);
-            }
-            other => {
-                dbg!(other);
-                break;
+        }
+        true => {
+            let flag = NameFlag::IBUS_BUS_NAME_FLAG_DO_NOT_QUEUE;
+            if bus.request_name(component_name, flag).is_none() {
+                panic!("cannot request {component_name:?} from ibus deamon");
             }
         }
     }
+
+    drop(component);
+    ribus::main();
+
     unsafe {
-        c::xcb_key_symbols_free(key_symbols);
+        info!("buf::quit");
+        ribus::c::ibus_quit();
     }
-    Ok(())
 }
