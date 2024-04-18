@@ -248,7 +248,7 @@ impl Engine {
     }
 
     #[inline]
-    pub fn valid_purpose(purpose: c::guint) -> bool {
+    pub fn invalid_input_context(purpose: c::guint) -> bool {
         match purpose {
             c::IBUS_INPUT_PURPOSE_FREE_FORM | c::IBUS_INPUT_PURPOSE_ALPHA | c::IBUS_INPUT_PURPOSE_NAME => false,
             _ => true,
@@ -262,6 +262,6 @@ impl Engine {
         unsafe {
             c::ibus_engine_get_content_type(engine, &mut purpose, &mut hints);
         }
-        Self::valid_purpose(purpose)
+        Self::invalid_input_context(purpose)
     }
 }

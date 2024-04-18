@@ -324,6 +324,6 @@ impl IEngine for IBusGokienEngine {
     unsafe extern "C" fn set_content_type(engine: *mut IBusEngine, purpose: guint, _hints: guint) {
         debug!("IBusGokienEngine::set_content_type");
         let gokien = Self::assert_is_self(engine);
-        gokien.disabled = ribus::Engine::valid_purpose(purpose);
+        gokien.disabled = ribus::Engine::invalid_input_context(purpose);
     }
 }
