@@ -97,7 +97,7 @@ fn run(ibus: bool) {
     ribus::main();
 
     unsafe {
-        info!("buf::quit");
+        info!("bus::quit");
         ribus::c::ibus_quit();
     }
 }

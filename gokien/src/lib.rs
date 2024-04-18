@@ -42,6 +42,11 @@ impl GokienEngine {
         self.output.clear();
     }
 
+    pub fn reset(&mut self) {
+        self.clear();
+        self.state = State::default();
+    }
+
     pub fn process_key(&mut self, keyval: guint, state: guint) -> bool {
         use State::*;
         // do not handle key released events, only consider key pressed ones

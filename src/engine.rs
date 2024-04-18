@@ -82,7 +82,7 @@ trait IEngine {
 // static ENGINE: Lazy<GokienEngine> = Lazy::new(|| GokienEngine::new());
 
 thread_local! {
-    pub static IBUS_ENGINE_CLASS: Cell<*mut IBusEngineClass> = Cell::new(ptr::null_mut());
+    pub static PARENT_CLASS: Cell<*mut IBusEngineClass> = Cell::new(ptr::null_mut());
 }
 
 #[repr(C)]
@@ -99,10 +99,6 @@ struct IBusGokienEngineClass {
 }
 
 impl IBusGokienEngine {
-    fn clear(&mut self) {
-        self.core.clear();
-    }
-
     unsafe extern "C" fn init(this: *mut GTypeInstance, g_class: *mut c_void) {
         debug!("IBusGokienEngine::init");
         debug!(?this, ?g_class);
@@ -205,7 +201,7 @@ impl IBusGokienEngineClass {
 
         let parent: *mut IBusEngineClass = g_type_class_peek_parent(class.cast()).cast();
         assert!(ribus::Engine::is_class(parent.cast()));
-        IBUS_ENGINE_CLASS.set(parent);
+        PARENT_CLASS.set(parent);
 
         // virtual function overrides go here
 
@@ -214,7 +210,7 @@ impl IBusGokienEngineClass {
         let engine_class: *mut IBusEngineClass = ibus_engine_class!(class.cast()).cast();
         let parent = &mut *engine_class;
         let _old = parent.process_key_event.replace(IBusGokienEngine::process_key_event);
-        // let _parent_old = (*IBUS_ENGINE_CLASS.get()).process_key_event;
+        // let _parent_old = (*PARENT_CLASS.get()).process_key_event;
         // assert_eq!(_old, _parent_old);
         parent.focus_in.replace(IBusGokienEngine::focus_in);
         parent.focus_out.replace(IBusGokienEngine::focus_out);
@@ -300,21 +296,21 @@ impl IEngine for IBusGokienEngine {
         let disabled = ribus::Engine::should_be_disable(engine);
         debug!(?disabled);
         gokien.disabled = disabled;
-        (*IBUS_ENGINE_CLASS.get()).focus_in.map(|f| f(engine));
+        (*PARENT_CLASS.get()).focus_in.map(|f| f(engine));
     }
 
     unsafe extern "C" fn focus_out(engine: *mut IBusEngine) {
         debug!("IBusGokienEngine::focus_out");
         Self::reset(engine);
         c::ibus_engine_hide_preedit_text(engine);
-        (*IBUS_ENGINE_CLASS.get()).focus_out.map(|f| f(engine));
+        (*PARENT_CLASS.get()).focus_out.map(|f| f(engine));
     }
 
     unsafe extern "C" fn reset(engine: *mut IBusEngine) {
         debug!("IBusGokienEngine::reset");
         let gokien = Self::assert_is_self(engine);
-        gokien.clear();
-        (*IBUS_ENGINE_CLASS.get()).reset.map(|f| f(engine));
+        gokien.core.reset();
+        (*PARENT_CLASS.get()).reset.map(|f| f(engine));
     }
 
     unsafe extern "C" fn property_activate(_engine: *mut IBusEngine, _prop_name: *const gchar, _prop_state: guint) {
