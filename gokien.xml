@@ -12,7 +12,7 @@
 	<engines>
 		<engine>
 			<name>gokien</name>
-			<longname>Gokien</longname>
+			<longname>Gokien Vietnamese IME</longname>
 			<description>Vietnamese IME for IBus using Gokien Engine</description>
 			<language>vi</language>
 			<license>GPLv3</license>
