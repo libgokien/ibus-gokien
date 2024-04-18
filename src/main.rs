@@ -46,11 +46,12 @@ fn get_engine_xml_path() -> Cow<'static, CStr> {
     if Path::new(default).is_file() {
         return DEFAULT.into();
     }
-    let mut libdir = env::var_os("DATADIR").unwrap();
-    libdir.push("ibus/component");
-    libdir.push(default);
-    if PathBuf::from(&libdir).is_file() {
-        let v = libdir.into_encoded_bytes();
+    let datadir = option_env!("DATADIR").unwrap_or("/usr/share");
+    let mut xml = PathBuf::from(datadir);
+    xml.push("ibus/component");
+    xml.push(default);
+    if PathBuf::from(&xml).is_file() {
+        let v = xml.into_os_string().into_encoded_bytes();
         let s = unsafe { CString::from_vec_unchecked(v) };
         return s.into();
     }

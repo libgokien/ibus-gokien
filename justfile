@@ -3,9 +3,11 @@
 prefix := "/usr"
 libexec := prefix / "libexec"
 datadir := prefix / "share"
-ibus_datadir := datadir / "ibus/component"
+ibus_componentdir := datadir / "ibus/component"
 author := 'Lzu Tao'
 version := '0.1'
+
+export DATADIR := datadir
 
 profile := "debug"
 bin_name := "ibus-engine-gokien"
@@ -57,7 +59,7 @@ install sudo="false": (build)
     sudo=
   fi
   ${sudo} install -t {{libexec}} "${CARGO_TARGET_DIR}"/{{profile}}/{{bin_name}}
-  ${sudo} install -m 444 -t {{ibus_datadir}} ./{{xml_name}}
+  ${sudo} install -m 444 -t {{ibus_componentdir}} ./{{xml_name}}
 
 uninstall sudo='false':
   #!/bin/bash
@@ -68,4 +70,4 @@ uninstall sudo='false':
     sudo=
   fi
   ${sudo} rm {{libexec}}/{{bin_name}}
-  ${sudo} rm {{ibus_datadir}}/{{xml_name}}
+  ${sudo} rm {{ibus_componentdir}}/{{xml_name}}

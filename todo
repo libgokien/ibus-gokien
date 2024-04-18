@@ -3,8 +3,7 @@ implements
   run with: 
   auto run with ibus or gnome
   phần cài đặt để làm việc với ibus chưa được tốt.
-  vẫn chưa được hay làm sao vậy? Tôi cũng không biết nữa? kỹ sư google và bạn nhỏ.
-hotkey. do not capture ibus hót keys.
+  hotkey. do not capture ibus hót keys.
   install
   ibus-daemon 
   ibus engine Gokien
