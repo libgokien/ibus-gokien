@@ -29,8 +29,8 @@ pub struct GokienEngine {
 
 impl GokienEngine {
     pub fn new() -> Self {
-        debug!("max_char = {MAX_CHARS_IN_WORD}");
         Self {
+            // FIXME: buffer and output only grows onwords, is that a problem?
             buffer: Vec::with_capacity(MAX_CHARS_IN_WORD),
             output: String::with_capacity(MAX_CHARS_IN_WORD),
             state: State::default(),
@@ -87,7 +87,7 @@ impl GokienEngine {
             Typing => {
                 match keyval {
                     c::IBUS_KEY_Caps_Lock..=c::IBUS_KEY_Hyper_R => {
-                        debug!("ignore caps lock");
+                        debug!("ignore keys from Caps to Hyper");
                         false
                     }
                     c::IBUS_KEY_BackSpace => {
