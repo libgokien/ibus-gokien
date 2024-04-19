@@ -1,6 +1,6 @@
 use core::ptr;
 use std::cell::Cell;
-use std::ffi::c_void;
+use std::ffi::{c_void};
 use std::mem::size_of;
 use std::sync::OnceLock;
 
@@ -13,7 +13,7 @@ use gokien::{GokienEngine, State};
 // use once_cell::unsync::Lazy as UnsyncLazy;
 use ribus::c::{self, gboolean, gchar, guint, FALSE, TRUE};
 use ribus::{g_type_from_class, g_type_from_instance, IBusEngine, IBusEngineClass};
-use tracing::debug;
+use tracing::{debug, error};
 
 #[cfg(FALSE)]
 macro_rules! dbg_gtypeclass {
@@ -53,28 +53,28 @@ trait IEngine {
     unsafe extern "C" fn reset(engine: *mut IBusEngine);
     unsafe extern "C" fn property_activate(engine: *mut IBusEngine, prop_name: *const gchar, prop_state: guint);
     unsafe extern "C" fn set_content_type(engine: *mut IBusEngine, purpose: guint, hints: guint);
+    unsafe extern "C" fn set_capabilities(engine: *mut IBusEngine, caps: guint);
+    unsafe extern "C" fn enable(engine: *mut IBusEngine);
+    // unsafe extern "C" fn disable(engine: *mut IBusEngine);
 
     // Delegate to default IBusEngineClass methods instead
     // unsafe extern "C" fn cursor_up(engine: *mut IBusEngine);
     // unsafe extern "C" fn cursor_down(engine: *mut IBusEngine);
     // unsafe extern "C" fn candidate_clicked(engine: *mut IBusEngine, index: guint, button: guint, state: guint);
-    // unsafe extern "C" fn enable(engine: *mut IBusEngine);
-    // unsafe extern "C" fn disable(engine: *mut IBusEngine);
     // unsafe extern "C" fn page_up(engine: *mut IBusEngine);
     // unsafe extern "C" fn page_down(engine: *mut IBusEngine);
-
-    // XXX: maybe ignore below methods with dummy empty function
-    // unsafe extern "C" fn set_cursor_location(engine: *mut IBusEngine, x: gint, y: gint, w: gint, h: gint);
-    // unsafe extern "C" fn set_capabilities(engine: *mut IBusEngine, caps: guint);
-    // unsafe extern "C" fn property_show(engine: *mut IBusEngine, prop_name: *const gchar);
-    // unsafe extern "C" fn property_hide(engine: *mut IBusEngine, prop_name: *const gchar);
-
     // unsafe extern "C" fn set_surrounding_text(
     //     engine: *mut IBusEngine,
-    //     text: *mut IBusText,
+    //     text: *mut c::IBusText,
     //     cursor_index: guint,
     //     anchor_pos: guint,
     // );
+
+    // XXX: maybe ignore below methods with dummy empty function
+    // unsafe extern "C" fn set_cursor_location(engine: *mut IBusEngine, x: gint, y: gint, w: gint, h: gint);
+    // unsafe extern "C" fn property_show(engine: *mut IBusEngine, prop_name: *const gchar);
+    // unsafe extern "C" fn property_hide(engine: *mut IBusEngine, prop_name: *const gchar);
+
     // extern "C" fn process_hand_writing_event(engine: *mut IBusEngine, coordinates: *const gdouble, coordinates_len: guint);
     // extern "C" fn cancel_hand_writing(engine: *mut IBusEngine, n_strokes: guint);
 }
@@ -205,18 +205,17 @@ impl IBusGokienEngineClass {
 
         // virtual function overrides go here
 
-        // FIXME: `parent` should be let untouched to get default impl
-        // XXX maybe use `engine_class` to override instead
+        // NOTE: `parent` should be let untouched to get default impl
         let engine_class: *mut IBusEngineClass = ibus_engine_class!(class.cast()).cast();
         let parent = &mut *engine_class;
         let _old = parent.process_key_event.replace(IBusGokienEngine::process_key_event);
-        // let _parent_old = (*PARENT_CLASS.get()).process_key_event;
-        // assert_eq!(_old, _parent_old);
         parent.focus_in.replace(IBusGokienEngine::focus_in);
         parent.focus_out.replace(IBusGokienEngine::focus_out);
         parent.reset.replace(IBusGokienEngine::reset);
         parent.property_activate.replace(IBusGokienEngine::property_activate);
         parent.set_content_type.replace(IBusGokienEngine::set_content_type);
+        parent.enable.replace(IBusGokienEngine::enable);
+        parent.set_capabilities.replace(IBusGokienEngine::set_capabilities);
 
         // let g_class: *mut GObjectClass = class.cast();
         // HACK: constructor nonsense: <https://docs.gtk.org/gobject/concepts.html#object-instantiation>
@@ -321,5 +320,45 @@ impl IEngine for IBusGokienEngine {
         debug!("IBusGokienEngine::set_content_type");
         let gokien = Self::assert_is_self(engine);
         gokien.disabled = ribus::Engine::invalid_input_context(purpose);
+    }
+
+    unsafe extern "C" fn set_capabilities(_engine: *mut IBusEngine, caps: guint) {
+        debug!("IBusGokienEngine::set_capabilities");
+        // some terminal emulators don't have preedit.
+        let _has_preedit_text = caps & c::IBUS_CAP_PREEDIT_TEXT != 0;
+        // almost all clients shall be able to be focused.
+        let has_focus = caps & c::IBUS_CAP_FOCUS != 0;
+        // many clients support surrounding text feature.
+        let has_surrounding_text = caps & c::IBUS_CAP_SURROUNDING_TEXT != 0;
+
+        if !has_focus {
+            error!("client is not able to get focus");
+        }
+
+        if !has_surrounding_text {
+            error!("client doesn't support surrounding text");
+        }
+    }
+
+    unsafe extern "C" fn enable(engine: *mut IBusEngine) {
+        debug!("IBusGokienEngine::enable");
+        // > It is also used to tell the input-context that the engine will utilize surrounding-text.
+        // > In that case, it must be called in "enable" handler, with both text and cursor set to NULL.
+        c::ibus_engine_get_surrounding_text(engine, ptr::null_mut(), ptr::null_mut(), ptr::null_mut());
+    }
+
+    // FIXME: this function cannot receive anything from clients.
+    //        At least tested in firefox and sublimetext on pop-os.
+    #[cfg(FALSE)]
+    unsafe extern "C" fn set_surrounding_text(
+        _engine: *mut IBusEngine,
+        text: *mut c::IBusText,
+        cursor_index: guint,
+        anchor_pos: guint,
+    ) {
+        debug!("[*] IBusGokienEngine::set_surrounding_text");
+        let text = c::ibus_text_get_text(text);
+        let text = CStr::from_ptr(text);
+        debug!(?text, cursor_index, anchor_pos);
     }
 }
