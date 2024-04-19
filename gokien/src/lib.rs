@@ -49,6 +49,7 @@ impl GokienEngine {
 
     pub fn process_key(&mut self, keyval: guint, state: guint) -> bool {
         use State::*;
+        debug!(keyval, state);
         // do not handle key released events, only consider key pressed ones
         if state & c::IBUS_RELEASE_MASK != 0 {
             return false;
@@ -100,6 +101,13 @@ impl GokienEngine {
                         let ch = char::from(keyval as u8);
                         self.buffer.push(ch);
                         self.output.clear();
+                        if let [w, head @ .., tail] = &*self.buffer {
+                            if *w == 'w' && head.iter().all(|c| *c == 'w') {
+                                self.output.extend(head);
+                                self.output.push(*tail);
+                                return true;
+                            }
+                        }
                         self.translate()
                     }
                     // non processed keys

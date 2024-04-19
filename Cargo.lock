@@ -82,6 +82,7 @@ version = "0.1.0"
 dependencies = [
  "ribus",
  "tracing",
+ "tracing-subscriber",
  "vi",
 ]
 

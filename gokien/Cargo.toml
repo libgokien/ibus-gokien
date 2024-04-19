@@ -9,3 +9,6 @@ license.workspace = true
 vi = "0.5.1"
 ribus.workspace = true
 tracing.workspace = true
+
+[dev-dependencies]
+tracing-subscriber.workspace = true

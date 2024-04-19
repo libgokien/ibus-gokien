@@ -1,6 +1,6 @@
 use core::ptr;
 use std::cell::Cell;
-use std::ffi::{c_void};
+use std::ffi::c_void;
 use std::mem::size_of;
 use std::sync::OnceLock;
 
@@ -249,7 +249,7 @@ impl IEngine for IBusGokienEngine {
         state: guint,
     ) -> gboolean {
         debug!("IBusGokienEngine::process_key_event");
-        debug!(?ksym, ?state);
+        // debug!(?ksym, ?state);
 
         let gokien = Self::assert_is_self(engine);
 
