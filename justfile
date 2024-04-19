@@ -1,15 +1,23 @@
 # set dotenv-filename := "install.env"
 
+author := 'Lzu Tao'
+version := '0.1'
+sudo := 'false'
+real_sudo := if sudo == 'sudo' { 'sudo' } else { '' }
+
+profile := "dev"
 prefix := "/usr"
 libexec := prefix / "libexec"
 datadir := prefix / "share"
 ibus_componentdir := datadir / "ibus/component"
-author := 'Lzu Tao'
-version := '0.1'
-
+cargo_target_dir := `echo ${CARGO_TARGET_DIR:-target}`
+bindir := if profile == 'dev' {
+  cargo_target_dir / 'debug'
+} else {
+  cargo_target_dir / profile
+}
 export DATADIR := datadir
 
-profile := "debug"
 bin_name := "ibus-engine-gokien"
 xml_name := "gokien.xml"
 replace := "\
@@ -23,22 +31,13 @@ check:
   cargo check
 
 build:
-  #!/bin/bash
-  set -eux
-  if [[ {{profile}} == "release" ]]; then
-    cargo build --release
-  else
-    cargo build
-  fi
+  cargo build --profile={{profile}}
 
-run: xml
+run $RUST_LOG='info': build
   #!/bin/bash
   set -eux
-  if [[ {{profile}} == "release" ]]; then
-    cargo run --release
-  else
-    RUST_LOG=debug cargo run
-  fi
+  just xml || true
+  "{{bindir}}"/{{bin_name}}
 
 [confirm]
 xml:
@@ -48,26 +47,15 @@ xml:
 ffi:
   bash ./ribus/gen.sh
 
-install sudo="false": (build)
+install : build
   #!/bin/bash
   set -eux
   just xml || true
-  CARGO_TARGET_DIR=${CARGO_TARGET_DIR:-target/}
-  if [[ {{sudo}} == "sudo" ]]; then
-    sudo=sudo
-  else
-    sudo=
-  fi
-  ${sudo} install -t {{libexec}} "${CARGO_TARGET_DIR}"/{{profile}}/{{bin_name}}
-  ${sudo} install -m 444 -t {{ibus_componentdir}} ./{{xml_name}}
+  {{real_sudo}} install -t {{libexec}} {{bindir}}/{{bin_name}}
+  {{real_sudo}} install -m 444 -t {{ibus_componentdir}} ./{{xml_name}}
 
-uninstall sudo='false':
+uninstall :
   #!/bin/bash
   set -eux
-  if [[ {{sudo}} == "sudo" ]]; then
-    sudo=sudo
-  else
-    sudo=
-  fi
-  ${sudo} rm {{libexec}}/{{bin_name}}
-  ${sudo} rm {{ibus_componentdir}}/{{xml_name}}
+  {{real_sudo}} rm {{libexec}}/{{bin_name}}
+  {{real_sudo}} rm {{ibus_componentdir}}/{{xml_name}}
