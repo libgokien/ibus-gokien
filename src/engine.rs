@@ -1,6 +1,8 @@
 use core::ptr;
 use std::cell::Cell;
 use std::ffi::c_void;
+#[cfg(surrounding_text)]
+use std::ffi::CStr;
 use std::mem::size_of;
 use std::sync::OnceLock;
 
@@ -63,12 +65,13 @@ trait IEngine {
     // unsafe extern "C" fn candidate_clicked(engine: *mut IBusEngine, index: guint, button: guint, state: guint);
     // unsafe extern "C" fn page_up(engine: *mut IBusEngine);
     // unsafe extern "C" fn page_down(engine: *mut IBusEngine);
-    // unsafe extern "C" fn set_surrounding_text(
-    //     engine: *mut IBusEngine,
-    //     text: *mut c::IBusText,
-    //     cursor_index: guint,
-    //     anchor_pos: guint,
-    // );
+    #[cfg(surrounding_text)]
+    unsafe extern "C" fn set_surrounding_text(
+        engine: *mut IBusEngine,
+        text: *mut c::IBusText,
+        cursor_index: guint,
+        anchor_pos: guint,
+    );
 
     // XXX: maybe ignore below methods with dummy empty function
     // unsafe extern "C" fn set_cursor_location(engine: *mut IBusEngine, x: gint, y: gint, w: gint, h: gint);
@@ -216,6 +219,10 @@ impl IBusGokienEngineClass {
         parent.set_content_type.replace(IBusGokienEngine::set_content_type);
         parent.enable.replace(IBusGokienEngine::enable);
         parent.set_capabilities.replace(IBusGokienEngine::set_capabilities);
+        #[cfg(surrounding_text)]
+        parent
+            .set_surrounding_text
+            .replace(IBusGokienEngine::set_surrounding_text);
 
         // let g_class: *mut GObjectClass = class.cast();
         // HACK: constructor nonsense: <https://docs.gtk.org/gobject/concepts.html#object-instantiation>
@@ -295,6 +302,18 @@ impl IEngine for IBusGokienEngine {
         let disabled = ribus::Engine::should_be_disable(engine);
         debug!(?disabled);
         gokien.disabled = disabled;
+
+        #[cfg(surrounding_text)]
+        {
+            let mut cursor_index = 0;
+            let mut anchor_pos = 0;
+            let mut text: *mut c::IBusText = ptr::null_mut();
+            c::ibus_engine_get_surrounding_text(engine, &mut text, &mut cursor_index, &mut anchor_pos);
+            let text = c::ibus_text_get_text(text);
+            let text = CStr::from_ptr(text);
+            debug!(?text, cursor_index, anchor_pos);
+        }
+
         (*PARENT_CLASS.get()).focus_in.map(|f| f(engine));
     }
 
@@ -349,7 +368,7 @@ impl IEngine for IBusGokienEngine {
 
     // FIXME: this function cannot receive anything from clients.
     //        At least tested in firefox and sublimetext on pop-os.
-    #[cfg(FALSE)]
+    #[cfg(surrounding_text)]
     unsafe extern "C" fn set_surrounding_text(
         _engine: *mut IBusEngine,
         text: *mut c::IBusText,

@@ -47,3 +47,6 @@ argh = "0.1.12"
 [dependencies.gokien]
 version = "0.1"
 path = "gokien"
+
+[features]
+surrounding_text = []

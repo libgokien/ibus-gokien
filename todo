@@ -1,10 +1,34 @@
 implements
 * install xml to run with ibus
-  run with: 
-  auto run with ibus or gnome
-  phần cài đặt để làm việc với ibus chưa được tốt.
-  hotkey. do not capture ibus hót keys.
-  install
-  ibus-daemon 
-  ibus engine Gokien
+  ```bash
+  ibus read-config
+  env DCONF_PROFILE=ibus dconf read /desktop/ibus/general/preload-engines
+  ibus-setup
+  gsettings get org.gnome.desktop.input-sources sources
+  ```
+
+  Standalone:
+  ```
+  just run debug
+  ibus engine gokien
+  ```
+
+* Bugs:
+  * wwww -> w unchanged
+    won't fix: change input method
+
+* https://github.com/BoGoEngine/ibus-bogo/issues/216
+
 * Fcitx https://github.com/fcitx/fcitx5-unikey
+
+* charset converter vscii, tcvn3
+  https://github.com/anhskohbo/u-convert
+  https://en.wikipedia.org/wiki/Vietnamese_Quoted-Readable
+  https://en.wikipedia.org/wiki/VSCII
+
+### hard features
+
+* surrounding_text: sometimes work in firefox textbox
+
+* emulate fake backspace: ibus_engine_forward_key_event
+  won't implement. too lazy and too much pain for that
