@@ -6,7 +6,8 @@ sudo := 'false'
 real_sudo := if sudo == 'sudo' { 'sudo' } else { '' }
 
 profile := "dev"
-prefix := "/usr"
+dest_dir := ''
+prefix :=  dest_dir / "usr"
 libexec := prefix / "libexec"
 datadir := prefix / "share"
 ibus_componentdir := datadir / "ibus/component"
@@ -27,17 +28,22 @@ s!@LIBEXECDIR@!" + libexec + "!;\
 s!@PKGDATADIR@!" + datadir + "!;\
 s!@PACKAGE_BUGREPORT@!to be defined!;"
 
+alias c := check
+alias b := build
+alias r := run
+
 check:
   cargo check
 
 build:
   cargo build --profile={{profile}}
 
-run $RUST_LOG='info': build
+# use `just run debug` for debugging purpose
+run $RUST_LOG='info':
   #!/bin/bash
   set -eux
   just xml || true
-  "{{bindir}}"/{{bin_name}}
+  cargo run --profile={{profile}}
 
 [confirm]
 xml:
