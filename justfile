@@ -21,12 +21,11 @@ export DATADIR := datadir
 
 bin_name := "ibus-engine-gokien"
 xml_name := "gokien.xml"
-replace := "\
-s!@AUTHOR@!" + author + "!;\
-s!@VERSION@!" + version + "!;\
-s!@LIBEXECDIR@!" + libexec + "!;\
-s!@PKGDATADIR@!" + datadir + "!;\
-s!@PACKAGE_BUGREPORT@!to be defined!;"
+replace := "s!@AUTHOR@!" + author + "!;" \
+         + "s!@VERSION@!" + version + "!;" \
+         + "s!@LIBEXECDIR@!" + libexec + "!;" \
+         + "s!@PKGDATADIR@!" + datadir + "!;" \
+         + "s!@PACKAGE_BUGREPORT@!to be defined!;"
 
 alias c := check
 alias b := build
