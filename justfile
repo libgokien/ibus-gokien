@@ -57,7 +57,7 @@ install : build
   #!/bin/bash
   set -eux
   just xml || true
-  {{real_sudo}} install -t {{libexec}} {{bindir}}/{{bin_name}}
+  {{real_sudo}} install --strip -t {{libexec}} {{bindir}}/{{bin_name}}
   {{real_sudo}} install -m 444 -t {{ibus_componentdir}} ./{{xml_name}}
 
 uninstall :
