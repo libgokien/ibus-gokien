@@ -14,7 +14,7 @@ use ribus::{Bus, Component, Factory, NameFlag};
 use tracing::info;
 
 #[derive(FromArgs)]
-/// Reach new heights.
+/// Vietnamese input method engine for Unix.
 struct Args {
     /// whether to run as ibus-daemon
     #[argh(switch)]
