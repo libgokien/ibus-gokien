@@ -319,7 +319,9 @@ impl IEngine for IBusGokienEngine {
 
     unsafe extern "C" fn focus_out(engine: *mut IBusEngine) {
         debug!("IBusGokienEngine::focus_out");
-        Self::reset(engine);
+        let gokien = Self::assert_is_self(engine);
+        gokien.commit_preedit(engine);
+        gokien.core.reset();
         c::ibus_engine_hide_preedit_text(engine);
         (*PARENT_CLASS.get()).focus_out.map(|f| f(engine));
     }
