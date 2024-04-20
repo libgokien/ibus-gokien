@@ -2,6 +2,7 @@
 members = [
   "ribus",
   "gokien",
+  "vncharset",
 ]
 
 [workspace.package]
