@@ -1,12 +1,145 @@
 #[cfg(test)]
 mod tests;
 
+use vi::processor::{LetterModification, ToneMark};
+
+const MAX_CHAR_IN_VNWORD: usize = "nghieeng".len().next_power_of_two();
+
 pub trait SingleByteCharset {}
 pub trait DoubleByteCharset {}
 
 impl SingleByteCharset for Tcvn3<'_> {}
 impl SingleByteCharset for Viscii<'_> {}
 impl DoubleByteCharset for Vni<'_> {}
+
+pub struct Viqr<'a>(&'a [u8]);
+
+#[derive(Debug)]
+enum State {
+    InWord,
+    WaitingModifier,
+    Escaping,
+    Finished,
+}
+
+fn is_vowel(b: u8) -> bool {
+    b"aeiyuoAEIYUO".contains(&b)
+}
+
+#[allow(non_snake_case)]
+fn is_A_z(b: u8) -> bool {
+    match b {
+        b'A'..=b'Z' => true,
+        b'a'..=b'z' => true,
+        _ => false,
+    }
+    // b.is_ascii_alphabetic()
+}
+
+fn maybe_tone_mark(b: u8) -> Option<ToneMark> {
+    use ToneMark::*;
+    let mark = match b {
+        b'\'' => Acute,
+        b'`' => Grave,
+        b'?' => HookAbove,
+        b'~' => Tilde,
+        b'.' => Underdot,
+        _ => return None,
+    };
+    Some(mark)
+}
+
+fn maybe_letter_modifier(b: u8) -> Option<LetterModification> {
+    use LetterModification::*;
+    let modifier = match b {
+        b'(' => Breve,
+        b'^' => Circumflex,
+        b'+' => Horn,
+        b'd' | b'D' => Dyet,
+        _ => return None,
+    };
+    Some(modifier)
+}
+
+fn viqr_inner(word: &mut String, state: &mut State, b: u8) {
+    use vi::processor::Transformation::*;
+    use vi::processor::{add_tone_char, modify_letter};
+    use State::*;
+    word.push(b as char);
+    match state {
+        InWord => {
+            if is_vowel(b) || b == b'd' || b == b'D' {
+                // dbg!(b as char);
+                *state = WaitingModifier;
+            } else if b == b'\\' {
+                *state = Escaping;
+            } else if is_A_z(b) {
+            } else {
+                *state = Finished;
+            }
+        }
+        WaitingModifier => {
+            if let Some(mark) = maybe_tone_mark(b) {
+                let _mark = word.pop();
+                let ch = word.pop().unwrap();
+                let new = add_tone_char(ch, &mark);
+                word.push(new);
+                *state = InWord;
+            } else if let Some(tone) = maybe_letter_modifier(b) {
+                let _ = word.pop();
+                match dbg!(modify_letter(word, &tone)) {
+                    Ignored => {
+                        word.push(b as char);
+                    }
+                    _ => {}
+                }
+            } else if is_vowel(b) {
+            } else if is_A_z(b) {
+                *state = InWord;
+            } else if b == b'\\' {
+                *state = Escaping;
+            } else {
+                *state = Finished;
+            }
+        }
+        Escaping => {
+            let ch = word.pop().unwrap();
+            let _ = word.pop();
+            word.push(ch);
+            *state = Finished;
+        }
+        _ => {}
+    }
+}
+
+impl<'a> Viqr<'a> {
+    pub fn from_bytes(bytes: &'a [u8]) -> Self {
+        Self(bytes)
+    }
+
+    #[track_caller]
+    pub fn encode_utf8(&self) -> String {
+        use State::*;
+        let mut out = String::with_capacity(self.0.len());
+        let mut word = String::with_capacity(MAX_CHAR_IN_VNWORD);
+        let mut state = InWord;
+
+        for &b in self.0 {
+            viqr_inner(&mut word, &mut state, b);
+            match state {
+                InWord => {}
+                WaitingModifier => {}
+                Escaping => {}
+                Finished => {
+                    out.push_str(&*word);
+                    word.clear();
+                    state = InWord;
+                }
+            }
+        }
+        out
+    }
+}
 
 // Despite the growing popularity of Unicode in computing,
 // the VNI Encoding is still in wide use by Vietnamese speakers
@@ -39,9 +172,7 @@ impl<'a> Viscii<'a> {
         let mut out = String::with_capacity(self.0.len() * 2);
         for &b in self.0 {
             let u = TABVISCII[b as usize];
-            let ch = unsafe {
-                char::from_u32_unchecked(u)
-            };
+            let ch = unsafe { char::from_u32_unchecked(u) };
             out.push(ch);
         }
         out
@@ -61,9 +192,7 @@ impl<'a> Tcvn3<'a> {
         let mut out = String::with_capacity(self.0.len() * 2);
         for &b in self.0 {
             let u = AS_UNICODE[b as usize];
-            let ch = unsafe {
-                char::from_u32_unchecked(u)
-            };
+            let ch = unsafe { char::from_u32_unchecked(u) };
             out.push(ch);
         }
         out

@@ -502,6 +502,9 @@ dependencies = [
 [[package]]
 name = "vncharset"
 version = "0.1.0"
+dependencies = [
+ "vi",
+]
 
 [[package]]
 name = "winapi"
