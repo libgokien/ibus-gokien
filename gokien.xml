@@ -13,7 +13,7 @@
 		<engine>
 			<name>gokien</name>
 			<longname>Gokien Vietnamese IME</longname>
-			<description>Vietnamese IME for IBus using Gokien Engine</description>
+			<description>Vietnamese IME for for Linux</description>
 			<language>vi</language>
 			<license>GPLv3</license>
 			<author>Lzu Tao</author>
