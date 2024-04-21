@@ -223,7 +223,9 @@ impl<'a> Vni<'a> {
                     dbg!(&out);
                 }
             }
-            Mac => {unimplemented!()}
+            Mac => {
+                unimplemented!()
+            }
         }
         out
     }
