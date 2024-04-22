@@ -37,12 +37,8 @@ fn main() {
     }
 
     let bus = prepare(args.ibus);
-    ribus::main(bus);
-
-    unsafe {
-        info!("bus::quit");
-        ribus::c::ibus_quit();
-    }
+    ribus::main(&bus);
+    bus.quit();
 }
 
 // First find in current executabe dir (for debugging), then

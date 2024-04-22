@@ -37,14 +37,12 @@ macro_rules! drop_gobject {
     };
 }
 
-pub fn main(_bus: Bus) {
+pub fn main(_bus: &Bus) {
     unsafe {
         c::ibus_main();
     }
 }
 
-// todo implement Drop with g_object_unref
-// https://gtk-rs.org/gtk4-rs/stable/latest/book/g_object_concepts.html
 #[repr(transparent)]
 pub struct Bus(*mut c::IBusBus);
 
@@ -103,8 +101,12 @@ impl Bus {
         unimplemented!()
     }
 
-    extern "C" fn quit() {
-        info!("bus quit");
+    pub fn quit(self) {
+        Self::quit_inner();
+    }
+
+    extern "C" fn quit_inner() {
+        info!("bus::quit");
         unsafe {
             c::ibus_quit();
         }
@@ -115,7 +117,7 @@ impl Bus {
             g_signal_connect_object(
                 /* instance */ self.0.cast(),
                 /* detailed_signal */ c"disconnected".as_ptr(),
-                /* c_handler */ Some(Self::quit),
+                /* c_handler */ Some(Self::quit_inner),
                 /* gobject */ ptr::null_mut(),
                 /* connect_flag */ gobject_sys::G_CONNECT_DEFAULT,
             );
@@ -126,8 +128,6 @@ impl Bus {
 #[repr(transparent)]
 pub struct Factory(*mut c::IBusFactory);
 
-// todo implement Drop with g_object_unref
-// https://gtk-rs.org/gtk4-rs/stable/latest/book/g_object_concepts.html
 impl Factory {
     pub fn new(bus: &Bus) -> Self {
         unsafe {
@@ -155,7 +155,6 @@ impl Factory {
     }
 }
 
-// TODO: add Drop for this
 #[repr(transparent)]
 pub struct Component(*mut c::IBusComponent);
 
