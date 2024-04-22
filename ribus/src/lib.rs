@@ -2,7 +2,6 @@ mod ffi;
 mod iter;
 
 use std::ffi::CStr;
-use std::mem::transmute;
 use std::ptr;
 
 pub use c::{
@@ -12,7 +11,6 @@ pub use ffi::ibus as c;
 use glib_sys::{g_string_free, g_string_sized_new};
 use gobject_sys::{g_object_unref, g_signal_connect_object, g_type_is_a};
 use iter::EngineIter;
-use libdbus_sys::DBusRequestNameReply;
 use tracing::info;
 
 #[macro_export]
@@ -87,11 +85,11 @@ impl Bus {
         }
     }
 
-    pub fn request_name(&self, name: &CStr, name_flag: NameFlag) -> Option<DBusRequestNameReply> {
+    pub fn request_name(&self, name: &CStr, name_flag: NameFlag) -> Option<c::IBusBusRequestNameReply> {
         unsafe {
             match c::ibus_bus_request_name(self.0, name.as_ptr(), name_flag as _) {
                 0 => None,
-                flag => Some(transmute(flag)),
+                flag => Some(flag),
             }
         }
     }
