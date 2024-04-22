@@ -37,7 +37,7 @@ macro_rules! drop_gobject {
     };
 }
 
-pub fn main() {
+pub fn main(_bus: Bus) {
     unsafe {
         c::ibus_main();
     }

@@ -36,8 +36,8 @@ fn main() {
         return;
     }
 
-    let _bus = prepare(args.ibus);
-    ribus::main();
+    let bus = prepare(args.ibus);
+    ribus::main(bus);
 
     unsafe {
         info!("bus::quit");
