@@ -58,7 +58,7 @@ fn get_engine_xml_path() -> Cow<'static, CStr> {
         let s = unsafe { CString::from_vec_unchecked(v) };
         return s.into();
     }
-    panic!("cannot file component file")
+    panic!("cannot find component file")
 }
 
 // Bus shall be alive when ibus_main starting
