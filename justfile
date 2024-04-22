@@ -32,17 +32,17 @@ alias b := build
 alias r := run
 
 check:
-  cargo check
+  cargo check --package ibus-gokien
 
 build:
-  cargo build --profile={{profile}}
+  cargo build --profile={{profile}} --package ibus-gokien
 
 # use `just run debug` for debugging purpose
 run $RUST_LOG='info':
   #!/bin/bash
   set -eux
   just xml || true
-  cargo run --profile={{profile}}
+  cargo run --profile={{profile}} --package ibus-gokien
 
 [confirm]
 xml:

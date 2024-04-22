@@ -1,0 +1,29 @@
+[package]
+name = "ibus-gokien"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[[bin]]
+name = "ibus-engine-gokien"
+path = "src/main.rs"
+
+[dependencies]
+glib-sys.workspace = true
+gobject-sys.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+ribus.workspace = true
+argh = "0.1.12"
+
+[dependencies.gokien]
+version = "0.1"
+path = "../gokien"
+
+[features]
+surrounding_text = []
+
+[lints]
+workspace = true

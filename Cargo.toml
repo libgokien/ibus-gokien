@@ -2,8 +2,10 @@
 members = [
   "ribus",
   "gokien",
+  "ibus-gokien",
   "vncharset",
 ]
+resolver = "2"
 
 [workspace.package]
 authors = ["Lzu Tao"]
@@ -26,36 +28,6 @@ new_without_default = "allow"
 not_unsafe_ptr_arg_deref = "allow"
 option_map_unit_fn = "allow"
 
-[package]
-name = "ibus-gokien"
-version = "0.1.0"
-authors.workspace = true
-edition.workspace = true
-license.workspace = true
-publish = false
-
-[[bin]]
-name = "ibus-engine-gokien"
-path = "src/main.rs"
-
 [profile.dev.package.ibus-gokien]
 # turn off debug-assertions
 #debug-assertions = false
-
-[dependencies]
-glib-sys.workspace = true
-gobject-sys.workspace = true
-tracing.workspace = true
-tracing-subscriber.workspace = true
-ribus.workspace = true
-argh = "0.1.12"
-
-[dependencies.gokien]
-version = "0.1"
-path = "gokien"
-
-[features]
-surrounding_text = []
-
-[lints]
-workspace = true
