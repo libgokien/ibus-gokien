@@ -1,8 +1,6 @@
 use core::ptr;
 use std::cell::Cell;
 use std::ffi::c_void;
-#[cfg(surrounding_text)]
-use std::ffi::CStr;
 use std::mem::size_of;
 use std::sync::OnceLock;
 
@@ -65,7 +63,7 @@ trait IEngine {
     // unsafe extern "C" fn candidate_clicked(engine: *mut IBusEngine, index: guint, button: guint, state: guint);
     // unsafe extern "C" fn page_up(engine: *mut IBusEngine);
     // unsafe extern "C" fn page_down(engine: *mut IBusEngine);
-    #[cfg(surrounding_text)]
+    #[cfg(feature = "surrounding_text")]
     unsafe extern "C" fn set_surrounding_text(
         engine: *mut IBusEngine,
         text: *mut c::IBusText,
@@ -219,7 +217,7 @@ impl IBusGokienEngineClass {
         parent.set_content_type.replace(IBusGokienEngine::set_content_type);
         parent.enable.replace(IBusGokienEngine::enable);
         parent.set_capabilities.replace(IBusGokienEngine::set_capabilities);
-        #[cfg(surrounding_text)]
+        #[cfg(feature = "surrounding_text")]
         parent
             .set_surrounding_text
             .replace(IBusGokienEngine::set_surrounding_text);
@@ -303,14 +301,13 @@ impl IEngine for IBusGokienEngine {
         debug!(?disabled);
         gokien.disabled = disabled;
 
-        #[cfg(surrounding_text)]
-        {
+        if cfg!(feature = "surrounding_text") {
             let mut cursor_index = 0;
             let mut anchor_pos = 0;
             let mut text: *mut c::IBusText = ptr::null_mut();
             c::ibus_engine_get_surrounding_text(engine, &mut text, &mut cursor_index, &mut anchor_pos);
             let text = c::ibus_text_get_text(text);
-            let text = CStr::from_ptr(text);
+            let text = std::ffi::CStr::from_ptr(text);
             debug!(?text, cursor_index, anchor_pos);
         }
 
@@ -370,7 +367,7 @@ impl IEngine for IBusGokienEngine {
 
     // FIXME: this function cannot receive anything from clients.
     //        At least tested in firefox and sublimetext on pop-os.
-    #[cfg(surrounding_text)]
+    #[cfg(feature = "surrounding_text")]
     unsafe extern "C" fn set_surrounding_text(
         _engine: *mut IBusEngine,
         text: *mut c::IBusText,
