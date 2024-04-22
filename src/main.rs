@@ -35,12 +35,19 @@ fn main() {
         eprintln!("{prog_name}-v{ver}");
         return;
     }
-    run(args.ibus);
+
+    let _bus = prepare(args.ibus);
+    ribus::main();
+
+    unsafe {
+        info!("bus::quit");
+        ribus::c::ibus_quit();
+    }
 }
 
+// First find in current executabe dir (for debugging), then
+// from `${DATADIR}/ibus/component`.
 fn get_engine_xml_path() -> Cow<'static, CStr> {
-    // first find in current executabe dir, then
-    // from `${{DATADIR}}/ibus/component`
     static DEFAULT: &CStr = c"gokien.xml";
     let default = unsafe { OsStr::from_encoded_bytes_unchecked(DEFAULT.to_bytes()) };
     if Path::new(default).is_file() {
@@ -55,10 +62,11 @@ fn get_engine_xml_path() -> Cow<'static, CStr> {
         let s = unsafe { CString::from_vec_unchecked(v) };
         return s.into();
     }
-    panic!("impossible")
+    panic!("cannot file component file")
 }
 
-fn run(ibus: bool) {
+// Bus shall be alive when ibus_main starting
+fn prepare(ibus: bool) -> Bus {
     let Some(bus) = Bus::new() else {
         panic!("cannot connect to ibus deamon");
     };
@@ -66,7 +74,6 @@ fn run(ibus: bool) {
     bus.register_disconnected_signal();
     let file_path = get_engine_xml_path();
     let component = Component::new_from_file(&file_path);
-    // component.output();
     let component_name = component.get_name();
     info!(?component_name);
 
@@ -77,7 +84,6 @@ fn run(ibus: bool) {
         let name = e.get_name();
         info!("engine = {name:?}");
         factory.add_engine(name, IBusGokienEngine::get_type());
-        // let _engine = factory.create_engine(name).unwrap();
     }
 
     match ibus {
@@ -93,12 +99,5 @@ fn run(ibus: bool) {
             }
         }
     }
-
-    drop(component);
-    ribus::main();
-
-    unsafe {
-        info!("bus::quit");
-        ribus::c::ibus_quit();
-    }
+    bus
 }
