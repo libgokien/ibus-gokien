@@ -106,7 +106,6 @@ dependencies = [
  "glib-sys",
  "gobject-sys",
  "gokien",
- "once_cell",
  "ribus",
  "tracing",
  "tracing-subscriber",
