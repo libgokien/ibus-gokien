@@ -65,7 +65,7 @@ fn run(ibus: bool) {
     info!("bus = {:?}", bus.hello());
     bus.register_disconnected_signal();
     let file_path = get_engine_xml_path();
-    let component = Component::new_from_file(&*file_path);
+    let component = Component::new_from_file(&file_path);
     // component.output();
     let component_name = component.get_name();
     info!(?component_name);

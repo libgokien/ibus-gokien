@@ -134,7 +134,7 @@ impl GokienEngine {
     }
 
     pub fn get_output(&self) -> &str {
-        &*self.output
+        &self.output
     }
 
     fn take_output(&mut self) -> String {

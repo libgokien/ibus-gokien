@@ -23,6 +23,8 @@ path = "ribus"
 [workspace.lints.clippy]
 match_like_matches_macro = "allow"
 new_without_default = "allow"
+not_unsafe_ptr_arg_deref = "allow"
+option_map_unit_fn = "allow"
 
 [package]
 name = "ibus-gokien"

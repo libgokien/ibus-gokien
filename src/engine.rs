@@ -83,7 +83,7 @@ trait IEngine {
 // static ENGINE: Lazy<GokienEngine> = Lazy::new(|| GokienEngine::new());
 
 thread_local! {
-    pub static PARENT_CLASS: Cell<*mut IBusEngineClass> = Cell::new(ptr::null_mut());
+    pub static PARENT_CLASS: Cell<*mut IBusEngineClass> = const { Cell::new(ptr::null_mut()) };
 }
 
 #[repr(C)]
