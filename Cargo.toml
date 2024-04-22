@@ -20,6 +20,10 @@ tracing-subscriber = "0.3.18"
 version = "0.1"
 path = "ribus"
 
+[workspace.lints.clippy]
+match_like_matches_macro = "allow"
+new_without_default = "allow"
+
 [package]
 name = "ibus-gokien"
 version = "0.1.0"
@@ -51,3 +55,6 @@ path = "gokien"
 
 [features]
 surrounding_text = []
+
+[lints]
+workspace = true
