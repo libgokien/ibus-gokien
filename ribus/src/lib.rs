@@ -11,7 +11,7 @@ pub use ffi::ibus as c;
 use glib_sys::{g_string_free, g_string_sized_new};
 use gobject_sys::{g_object_unref, g_signal_connect_object, g_type_is_a};
 use iter::EngineIter;
-use tracing::info;
+use tracing::{error, info};
 
 #[macro_export]
 macro_rules! g_type_from_class {
@@ -232,8 +232,11 @@ impl Engine {
         unsafe { g_type_is_a(g_type_from_instance!(this), Self::get_type()) != c::FALSE }
     }
 
-    pub fn is_class(this: *const Self) -> bool {
-        unsafe { g_type_is_a(g_type_from_class!(this), Self::get_type()) != c::FALSE }
+    pub fn is_class(this: *const Self) {
+        let ok = unsafe { g_type_is_a(g_type_from_class!(this), Self::get_type()) != c::FALSE };
+        if !ok {
+            error!("this is not IBusEngine");
+        }
     }
 
     pub fn get_type() -> c::GType {

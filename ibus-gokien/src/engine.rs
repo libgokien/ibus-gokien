@@ -103,21 +103,27 @@ impl IBusGokienEngine {
     unsafe extern "C" fn init(this: *mut GTypeInstance, g_class: *mut c_void) {
         debug!("IBusGokienEngine::init");
         debug!(?this, ?g_class);
-        assert!(Self::is_self(this.cast()));
+        Self::is_self(this.cast());
         let this = this.cast::<Self>();
         // SAFETY: this.core should be dangling since zero-initilizing by gobject
         ptr::addr_of_mut!((*this).core).write(GokienEngine::new());
         ptr::addr_of_mut!((*this).disabled).write(false);
         // how to use g_class?
-        assert!(Self::is_class(g_class.cast()));
+        Self::is_class(g_class.cast());
     }
 
-    fn is_self(this: *mut Self) -> bool {
-        unsafe { g_type_is_a(g_type_from_instance!(this), Self::get_type()) != c::FALSE }
+    fn is_self(this: *mut Self) {
+        let ok = unsafe { g_type_is_a(g_type_from_instance!(this), Self::get_type()) != c::FALSE };
+        if !ok {
+            error!("this is not IBusGokienEngine");
+        }
     }
 
-    pub fn is_class(this: *const Self) -> bool {
-        unsafe { g_type_is_a(g_type_from_class!(this), Self::get_type()) != c::FALSE }
+    pub fn is_class(this: *const Self) {
+        let ok = unsafe { g_type_is_a(g_type_from_class!(this), Self::get_type()) != c::FALSE };
+        if !ok {
+            error!("this is not IBusGokienEngineClass");
+        }
     }
 
     pub fn get_type() -> GType {
@@ -185,7 +191,7 @@ impl IBusGokienEngine {
 
     fn assert_is_self<'a>(engine: *mut IBusEngine) -> &'a mut Self {
         let gokien: *mut Self = engine.cast();
-        assert!(Self::is_self(gokien));
+        Self::is_self(gokien);
         unsafe { &mut *gokien }
     }
 }
@@ -197,11 +203,11 @@ impl IBusGokienEngineClass {
         debug!("IBusGokienEngineClass::init");
         debug!(?class, ?_class_data);
 
-        assert!(IBusGokienEngine::is_class(class.cast()));
+        IBusGokienEngine::is_class(class.cast());
         let class = class.cast::<Self>();
 
         let parent: *mut IBusEngineClass = g_type_class_peek_parent(class.cast()).cast();
-        assert!(ribus::Engine::is_class(parent.cast()));
+        ribus::Engine::is_class(parent.cast());
         PARENT_CLASS.set(parent);
 
         // virtual function overrides go here

@@ -149,7 +149,7 @@ impl GokienEngine {
     }
 
     fn replace_output(&mut self, s: String) {
-        assert!(self.output.is_empty());
+        debug_assert!(self.output.is_empty());
         let _ = mem::replace(&mut self.output, s);
     }
 
