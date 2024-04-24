@@ -4,13 +4,11 @@ use std::ffi::c_void;
 use std::mem::size_of;
 use std::sync::OnceLock;
 
-// use std::sync::Mutex;
 use glib_sys::GType;
 use gobject_sys::{g_type_class_peek_parent, g_type_is_a, g_type_register_static_simple, GTypeInstance};
 #[cfg(FALSE)]
 use gobject_sys::{GObject, GObjectClass};
 use gokien::{GokienEngine, State};
-// use once_cell::unsync::Lazy as UnsyncLazy;
 use ribus::c::{self, gboolean, gchar, guint, FALSE, TRUE};
 use ribus::{g_type_from_class, g_type_from_instance, IBusEngine, IBusEngineClass};
 use tracing::{debug, error};
@@ -79,8 +77,6 @@ trait IEngine {
     // extern "C" fn process_hand_writing_event(engine: *mut IBusEngine, coordinates: *const gdouble, coordinates_len: guint);
     // extern "C" fn cancel_hand_writing(engine: *mut IBusEngine, n_strokes: guint);
 }
-
-// static ENGINE: Lazy<GokienEngine> = Lazy::new(|| GokienEngine::new());
 
 thread_local! {
     pub static PARENT_CLASS: Cell<*mut IBusEngineClass> = const { Cell::new(ptr::null_mut()) };
