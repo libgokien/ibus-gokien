@@ -2,6 +2,7 @@ mod ffi;
 mod iter;
 
 use std::ffi::CStr;
+use std::fmt::{self, Debug};
 use std::ptr;
 
 pub use c::{
@@ -50,6 +51,12 @@ drop_gobject!(Bus);
 drop_gobject!(Factory);
 drop_gobject!(Component);
 
+impl Debug for Bus {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        Debug::fmt(self.hello(), f)
+    }
+}
+
 impl Bus {
     pub fn new() -> Option<Self> {
         unsafe {
@@ -69,7 +76,7 @@ impl Bus {
         }
     }
 
-    pub fn hello(&self) -> &CStr {
+    fn hello(&self) -> &CStr {
         unsafe { CStr::from_ptr(c::ibus_bus_hello(self.0)) }
     }
 
