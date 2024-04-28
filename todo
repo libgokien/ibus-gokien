@@ -1,4 +1,6 @@
-### Triage
+# Triage
+
+### use tracing-journald to log to systemd-journal
 
 ### Install and test with log
   ```bash
