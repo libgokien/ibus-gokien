@@ -680,6 +680,7 @@ pub struct _IBusProcessKeyEventData {
     pub _bindgen_opaque_blob: [u32; 3usize],
 }
 extern "C" {
+    pub fn g_list_free(list: *mut GList);
     pub fn ibus_init();
     pub fn ibus_main();
     pub fn ibus_quit();

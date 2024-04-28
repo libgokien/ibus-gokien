@@ -224,8 +224,7 @@ impl IEngine for IBusGokienEngine {
             }
             State::Interrupting => {
                 gokien.commit_preedit(engine);
-                // maybe we want to disable TELEX here
-                unimplemented!();
+                // FIXME: maybe we want to disable TELEX here
             }
             State::Backspacing => {
                 gokien.core.state = State::Typing;

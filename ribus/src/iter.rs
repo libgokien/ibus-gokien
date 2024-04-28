@@ -1,4 +1,4 @@
-use crate::c::GList;
+use crate::c::{g_list_free, GList};
 
 #[derive(Debug)]
 pub struct EngineIter {
@@ -15,7 +15,7 @@ impl EngineIter {
 impl Drop for EngineIter {
     fn drop(&mut self) {
         unsafe {
-            glib_sys::g_list_free(self.origin.cast());
+            g_list_free(self.origin);
         }
     }
 }

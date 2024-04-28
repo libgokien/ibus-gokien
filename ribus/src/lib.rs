@@ -5,11 +5,8 @@ use std::ffi::CStr;
 use std::fmt::{self, Debug};
 use std::ptr;
 
-pub use c::{
-    IBusBusNameFlag as NameFlag, IBusEngine, IBusEngineClass, IBusObject as Object, IBusObjectClass as ObjectClass,
-};
+pub use c::{IBusBusNameFlag as NameFlag, IBusEngine, IBusEngineClass};
 pub use ffi::ibus as c;
-use glib_sys::{g_string_free, g_string_sized_new};
 use gobject_sys::{g_object_unref, g_signal_connect_object, g_type_is_a};
 use iter::EngineIter;
 use tracing::{error, info};
@@ -104,10 +101,6 @@ impl Bus {
         unsafe { c::FALSE != c::ibus_bus_register_component(self.0, component.0) }
     }
 
-    pub fn get_config(&self) {
-        unimplemented!()
-    }
-
     pub fn quit(self) {
         Self::quit_inner();
     }
@@ -192,19 +185,6 @@ impl Component {
             iter::EngineIter::new(list)
         }
     }
-
-    pub fn output(&self) {
-        unsafe {
-            let gs = g_string_sized_new(1024);
-            if gs.is_null() {
-                return;
-            }
-            c::ibus_component_output(self.0, gs.cast(), 0);
-            let s = std::slice::from_raw_parts((*gs).str.cast::<u8>(), (*gs).len);
-            println!("{}", std::str::from_utf8(s).unwrap());
-            g_string_free(gs, !c::FALSE);
-        }
-    }
 }
 
 // The recommended way to load engine description data is using
@@ -222,19 +202,10 @@ impl EngineDesc {
     }
 }
 
-#[derive(Debug)]
 #[repr(transparent)]
 pub struct Engine(IBusEngine);
 
 impl Engine {
-    pub fn new() -> Self {
-        panic!("use Factory::create_engine instead");
-    }
-
-    pub fn get_name(&self) -> &CStr {
-        todo!()
-    }
-
     pub fn is_self(this: *const Self) -> bool {
         unsafe { g_type_is_a(g_type_from_instance!(this), Self::get_type()) != c::FALSE }
     }
