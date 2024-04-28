@@ -77,7 +77,8 @@ impl GokienEngine {
                         self.state = Typing;
                     }
                     _ => {
-                        unreachable!();
+                        error!("shift+shift unhandle?");
+                        return false;
                     }
                 }
                 return true;
@@ -182,10 +183,10 @@ impl GokienEngine {
 }
 
 // ensure that `s` doesn't have internal NUL byte
-pub fn cstr_from_str(s: String) -> CString {
+fn cstr_from_str(s: String) -> CString {
     unsafe { CString::from_vec_unchecked(s.into_bytes()) }
 }
 
-pub fn str_from_cstr(s: CString) -> String {
+fn str_from_cstr(s: CString) -> String {
     unsafe { String::from_utf8_unchecked(s.into_bytes()) }
 }
