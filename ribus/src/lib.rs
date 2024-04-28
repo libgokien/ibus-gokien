@@ -159,7 +159,7 @@ impl Factory {
 pub struct Component(*mut c::IBusComponent);
 
 impl Component {
-    pub fn new_from_file(path: &CStr) -> Self {
+    pub fn from_file(path: &CStr) -> Self {
         unsafe {
             let comp = c::ibus_component_new_from_file(path.as_ptr());
             Self(comp)
@@ -188,7 +188,7 @@ impl Component {
 }
 
 // The recommended way to load engine description data is using
-// `Component::new_from_file` to load a component file, which also includes
+// `Component::from_file` to load a component file, which also includes
 // engine description data.
 #[repr(transparent)]
 pub struct EngineDesc(*mut c::IBusEngineDesc);

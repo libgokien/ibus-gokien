@@ -145,7 +145,8 @@ impl IBusGokienEngine {
         self.core.clear();
     }
 
-    fn assert_is_self<'a>(engine: *mut IBusEngine) -> &'a mut Self {
+    // call more than once in scope is UB.
+    unsafe fn assert_is_self<'a>(engine: *mut IBusEngine) -> &'a mut Self {
         let gokien: *mut Self = engine.cast();
         Self::is_self(gokien);
         unsafe { &mut *gokien }

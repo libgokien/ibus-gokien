@@ -69,7 +69,7 @@ fn prepare(ibus: bool) -> Bus {
     info!(?bus);
     bus.register_disconnected_signal();
     let file_path = get_engine_xml_path();
-    let component = Component::new_from_file(&file_path);
+    let component = Component::from_file(&file_path);
     let component_name = component.get_name();
     info!(?component_name);
 
