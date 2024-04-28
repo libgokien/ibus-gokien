@@ -24,9 +24,7 @@ xml_name := "gokien.xml"
 replace := "s!@AUTHOR@!" + author + "!;" \
          + "s!@VERSION@!" + version + "!;" \
          + "s!@LIBEXECDIR@!" + libexec + "!;" \
-         + "s!@PKGDATADIR@!" + datadir + "!;" \
-         + "s!@PACKAGE_BUGREPORT@!to be defined!;"
-
+         + "s!@PKGDATADIR@!" + datadir + "!;"
 alias c := check
 alias b := build
 alias r := run
