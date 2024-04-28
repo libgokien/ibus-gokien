@@ -103,7 +103,6 @@ name = "ibus-gokien"
 version = "0.1.0"
 dependencies = [
  "argh",
- "glib-sys",
  "gobject-sys",
  "gokien",
  "ribus",

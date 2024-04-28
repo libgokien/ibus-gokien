@@ -4,12 +4,9 @@ use std::ffi::c_void;
 use std::mem::size_of;
 use std::sync::OnceLock;
 
-use glib_sys::GType;
 use gobject_sys::{g_type_class_peek_parent, g_type_is_a, g_type_register_static_simple, GTypeInstance};
-#[cfg(FALSE)]
-use gobject_sys::{GObject, GObjectClass};
 use gokien::{GokienEngine, State};
-use ribus::c::{self, gboolean, gchar, guint, FALSE, TRUE};
+use ribus::c::{self, gboolean, guint, GType, FALSE, TRUE};
 use ribus::{g_type_from_class, g_type_from_instance, IBusEngine, IBusEngineClass};
 use tracing::{debug, error};
 
@@ -29,7 +26,6 @@ trait IEngine {
     unsafe extern "C" fn focus_in(engine: *mut IBusEngine);
     unsafe extern "C" fn focus_out(engine: *mut IBusEngine);
     unsafe extern "C" fn reset(engine: *mut IBusEngine);
-    unsafe extern "C" fn property_activate(engine: *mut IBusEngine, prop_name: *const gchar, prop_state: guint);
     unsafe extern "C" fn set_content_type(engine: *mut IBusEngine, purpose: guint, hints: guint);
     unsafe extern "C" fn set_capabilities(engine: *mut IBusEngine, caps: guint);
     unsafe extern "C" fn enable(engine: *mut IBusEngine);
@@ -41,6 +37,7 @@ trait IEngine {
     // unsafe extern "C" fn candidate_clicked(engine: *mut IBusEngine, index: guint, button: guint, state: guint);
     // unsafe extern "C" fn page_up(engine: *mut IBusEngine);
     // unsafe extern "C" fn page_down(engine: *mut IBusEngine);
+    // unsafe extern "C" fn property_activate(engine: *mut IBusEngine, prop_name: *const gchar, prop_state: guint);
     #[cfg(feature = "surrounding_text")]
     unsafe extern "C" fn set_surrounding_text(
         engine: *mut IBusEngine,
@@ -148,23 +145,6 @@ impl IBusGokienEngine {
         self.core.clear();
     }
 
-    #[cfg(FALSE)]
-    unsafe extern "C" fn constructor(_: usize, _: u32, _: *mut glib_sys::GObjectConstructParam) -> *mut GObject {
-        // unimplemented!()
-    }
-
-    #[cfg(FALSE)]
-    unsafe extern "C" fn constructed(obj: *mut GObject) {
-        let _this: *mut Self = obj.cast();
-        // unimplemented!()
-    }
-
-    #[cfg(FALSE)]
-    unsafe extern "C" fn finalize(obj: *mut GObject) {
-        let _this: *mut Self = obj.cast();
-        // unimplemented!()
-    }
-
     fn assert_is_self<'a>(engine: *mut IBusEngine) -> &'a mut Self {
         let gokien: *mut Self = engine.cast();
         Self::is_self(gokien);
@@ -191,11 +171,10 @@ impl IBusGokienEngineClass {
         // NOTE: `parent` should be let untouched to get default impl
         let engine_class: *mut IBusEngineClass = ibus_engine_class!(class.cast()).cast();
         let parent = &mut *engine_class;
-        let _old = parent.process_key_event.replace(IBusGokienEngine::process_key_event);
+        parent.process_key_event.replace(IBusGokienEngine::process_key_event);
         parent.focus_in.replace(IBusGokienEngine::focus_in);
         parent.focus_out.replace(IBusGokienEngine::focus_out);
         parent.reset.replace(IBusGokienEngine::reset);
-        parent.property_activate.replace(IBusGokienEngine::property_activate);
         parent.set_content_type.replace(IBusGokienEngine::set_content_type);
         parent.enable.replace(IBusGokienEngine::enable);
         parent.set_capabilities.replace(IBusGokienEngine::set_capabilities);
@@ -213,18 +192,6 @@ impl IBusGokienEngineClass {
         // (*g_class).finalize = Some(IBusGokienEngine::finalize);
         // let io_class: *mut ribus::ObjectClass = class.cast();
         // (*io_class).destroy = Some(42);
-    }
-
-    // workaround `#![feature(inherent_associated_types)]`
-    #[cfg(FALSE)]
-    fn as_parent(this: *mut Self) -> *mut IBusEngineClass {
-        this.cast()
-    }
-
-    // reset states of EngineClass
-    #[cfg(FALSE)]
-    unsafe extern "C" fn deinit(_g_class: *mut c_void, _class_data: *mut c_void) {
-        unimplemented!()
     }
 }
 
@@ -310,10 +277,6 @@ impl IEngine for IBusGokienEngine {
         let gokien = Self::assert_is_self(engine);
         gokien.core.reset();
         (*PARENT_CLASS.get()).reset.map(|f| f(engine));
-    }
-
-    unsafe extern "C" fn property_activate(_engine: *mut IBusEngine, _prop_name: *const gchar, _prop_state: guint) {
-        unimplemented!()
     }
 
     unsafe extern "C" fn set_content_type(engine: *mut IBusEngine, purpose: guint, _hints: guint) {

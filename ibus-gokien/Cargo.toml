@@ -11,7 +11,6 @@ name = "ibus-engine-gokien"
 path = "src/main.rs"
 
 [dependencies]
-glib-sys.workspace = true
 gobject-sys.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true

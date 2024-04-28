@@ -13,7 +13,6 @@ edition = "2021"
 license = "GPLv3"
 
 [workspace.dependencies]
-glib-sys = "0.19.0"
 gobject-sys = "0.19.0"
 tracing = "0.1.40"
 tracing-subscriber = "0.3.18"
