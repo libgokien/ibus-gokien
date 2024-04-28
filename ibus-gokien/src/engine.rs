@@ -13,26 +13,6 @@ use ribus::c::{self, gboolean, gchar, guint, FALSE, TRUE};
 use ribus::{g_type_from_class, g_type_from_instance, IBusEngine, IBusEngineClass};
 use tracing::{debug, error};
 
-#[cfg(FALSE)]
-macro_rules! dbg_gtypeclass {
-    ($class:expr) => {{
-        let name = gobject_sys::g_type_name(ribus::g_type_from_class!($class));
-        let $class = std::ffi::CStr::from_ptr(name);
-        dbg!($class);
-    }};
-}
-
-// #[cfg(FALSE)]
-#[macro_export]
-macro_rules! dbg_gtype {
-    ($obj:expr) => {{
-        let name = gobject_sys::g_type_name(ribus::g_type_from_instance!($obj));
-        let $obj = std::ffi::CStr::from_ptr(name);
-        dbg!($obj);
-    }};
-}
-
-// #[cfg(FALSE)]
 macro_rules! ibus_engine_class {
     ($class:expr) => {{
         gobject_sys::g_type_check_class_cast($class, ribus::Engine::get_type())
