@@ -1,10 +1,16 @@
-#!/bin/sh
-# install or clone header files of `libxcb-keysyms1-dev`
+#!/bin/bash
+
+# These ones are troublesome that bindgen cannot generate correctly.
+CUSTOME="\
+pub type gsize = usize;
+pub const FALSE: gboolean = 0;
+pub const TRUE: gboolean = !FALSE;"
 
 OUT=ribus/src/ffi/ibus.rs
 bindgen \
 	/usr/include/ibus-1.0/ibus.h \
 	--output "$OUT" \
+	--raw-line "$CUSTOME" \
 	--opaque-type '_IBus[A-DF-NP-Z].*|_G[A-KM-RT-Z].*|_IBusEngineDesc.*|_IBusObserved.*' \
 	--allowlist-function 'ibus_(bus|component|engine|engine_desc|factory|text).*' \
 	--allowlist-function 'ibus_main|ibus_quit|ibus_init' \
@@ -24,9 +30,3 @@ bindgen \
 	-- \
 	--std=c99 \
 	$(pkg-config --cflags ibus-1.0)
-
-cat << EOF >> "$OUT"
-pub type gsize = usize;
-pub const FALSE: gboolean = 0;
-pub const TRUE: gboolean = !FALSE;
-EOF
