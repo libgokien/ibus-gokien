@@ -1,5 +1,5 @@
 #[cfg(windows)]
-compile_eror!("ibus is not supported on Windows");
+compile_error!("ibus is not supported on Windows");
 
 mod engine;
 
