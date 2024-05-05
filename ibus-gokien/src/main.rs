@@ -25,10 +25,25 @@ struct Args {
 }
 
 fn main() {
-    // install global collector configured based on RUST_LOG env var.
-    tracing_subscriber::fmt::init();
-
     let args: Args = argh::from_env();
+
+    match args.ibus {
+        true => {
+            use tracing_subscriber::layer::SubscriberExt;
+            let layer = tracing_journald::Layer::new().unwrap();
+            let subscriber = tracing_subscriber::fmt().finish().with(layer);
+
+            match tracing::subscriber::set_global_default(subscriber) {
+                Ok(()) => {}
+                Err(e) => panic!("cannot init logging to journald: {e}"),
+            }
+        }
+        false => {
+            // install global collector configured based on RUST_LOG env var.
+            tracing_subscriber::fmt::init();
+        }
+    }
+
     if args.version {
         let prog_name = env!("CARGO_PKG_NAME");
         let ver = env!("CARGO_PKG_VERSION");
@@ -78,7 +93,7 @@ fn prepare(ibus: bool) -> Bus {
     // let engines = bus.list_engines();
     for e in engines {
         let name = e.get_name();
-        info!("engine = {name:?}");
+        info!(engine = ?name);
         factory.add_engine(name, IBusGokienEngine::get_type());
     }
 

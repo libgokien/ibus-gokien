@@ -11,11 +11,12 @@ name = "ibus-engine-gokien"
 path = "src/main.rs"
 
 [dependencies]
-gobject-sys.workspace = true
-tracing.workspace = true
-tracing-subscriber.workspace = true
-ribus.workspace = true
 argh = "0.1.12"
+gobject-sys.workspace = true
+ribus.workspace = true
+tracing-journald = "0.3.0"
+tracing-subscriber.workspace = true
+tracing.workspace = true
 
 [dependencies.gokien]
 version = "0.1"
