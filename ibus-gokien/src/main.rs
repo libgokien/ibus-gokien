@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 use argh::FromArgs;
 use engine::IBusGokienEngine;
 use ribus::{Bus, Component, Factory, NameFlag};
-use tracing::info;
+use tracing::{error, info};
 
 #[derive(FromArgs)]
 /// Vietnamese input method engine for Unix.
@@ -51,18 +51,24 @@ fn main() {
         return;
     }
 
-    let bus = prepare(args.ibus);
-    ribus::main(&bus);
-    bus.quit();
+    match prepare(args.ibus) {
+        Some(bus) => {
+            ribus::main(&bus);
+            bus.quit();
+        }
+        None => {
+            error!("fail to initialize ibus-gokien");
+        }
+    }
 }
 
 // First find in current executabe dir (for debugging), then
 // from `${DATADIR}/ibus/component`.
-fn get_engine_xml_path() -> Cow<'static, CStr> {
+fn get_engine_xml_path() -> Option<Cow<'static, CStr>> {
     static DEFAULT: &CStr = c"gokien.xml";
     let default = unsafe { OsStr::from_encoded_bytes_unchecked(DEFAULT.to_bytes()) };
     if Path::new(default).is_file() {
-        return DEFAULT.into();
+        return Some(DEFAULT.into());
     }
     let datadir = option_env!("DATADIR").unwrap_or("/usr/share");
     let mut xml = PathBuf::from(datadir);
@@ -71,19 +77,23 @@ fn get_engine_xml_path() -> Cow<'static, CStr> {
     if PathBuf::from(&xml).is_file() {
         let v = xml.into_os_string().into_encoded_bytes();
         let s = unsafe { CString::from_vec_unchecked(v) };
-        return s.into();
+        return Some(s.into());
     }
-    panic!("cannot find component file")
+    None
 }
 
 // Bus shall be alive when ibus_main starting
-fn prepare(ibus: bool) -> Bus {
+fn prepare(ibus: bool) -> Option<Bus> {
     let Some(bus) = Bus::new() else {
-        panic!("cannot connect to ibus deamon");
+        error!("cannot connect to ibus deamon");
+        return None;
     };
     info!(?bus);
     bus.register_disconnected_signal();
-    let file_path = get_engine_xml_path();
+    let Some(file_path) = get_engine_xml_path() else {
+        error!("cannot find component file");
+        return None;
+    };
     let component = Component::from_file(&file_path);
     let component_name = component.get_name();
     info!(?component_name);
@@ -100,15 +110,17 @@ fn prepare(ibus: bool) -> Bus {
     match ibus {
         false => {
             if !bus.register_component(&component) {
-                panic!("cannot register component to ibus deamon");
+                error!("cannot register component to ibus deamon");
+                return None;
             }
         }
         true => {
             let flag = NameFlag::IBUS_BUS_NAME_FLAG_DO_NOT_QUEUE;
             if bus.request_name(component_name, flag).is_none() {
-                panic!("cannot request {component_name:?} from ibus deamon");
+                error!("cannot request {component_name:?} from ibus deamon");
+                return None;
             }
         }
     }
-    bus
+    Some(bus)
 }
