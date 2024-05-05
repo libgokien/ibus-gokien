@@ -6,9 +6,10 @@ pub type gsize = usize;
 pub const FALSE: gboolean = 0;
 pub const TRUE: gboolean = !FALSE;"
 
+IN=ribus/ibus_wrapper.h
 OUT=ribus/src/ffi/ibus.rs
 bindgen \
-	/usr/include/ibus-1.0/ibus.h \
+	"$IN" \
 	--output "$OUT" \
 	--raw-line "$CUSTOME" \
 	--opaque-type '_IBus[A-DF-NP-Z].*|_G[A-KM-RT-Z].*|_IBusEngineDesc.*|_IBusObserved.*' \
@@ -22,7 +23,7 @@ bindgen \
 	--blocklist-function 'ibus_.*async.*' \
 	--no-prepend-enum-name \
 	--rustified-enum 'IBusBusNameFlag' \
-	--default-macro-constant-type=unsigned `#` \
+	--default-macro-constant-type=unsigned \
 	--use-core \
 	--merge-extern-blocks \
 	--no-layout-tests \

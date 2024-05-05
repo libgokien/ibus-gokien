@@ -853,11 +853,7 @@ extern "C" {
     pub fn ibus_bus_current_input_context(bus: *mut IBusBus) -> *mut gchar;
     pub fn ibus_bus_register_component(bus: *mut IBusBus, component: *mut IBusComponent) -> gboolean;
     pub fn ibus_bus_list_engines(bus: *mut IBusBus) -> *mut GList;
-    pub fn ibus_bus_list_active_engines(bus: *mut IBusBus) -> *mut GList;
     pub fn ibus_bus_get_engines_by_names(bus: *mut IBusBus, names: *const *const gchar) -> *mut *mut IBusEngineDesc;
-    pub fn ibus_bus_get_use_sys_layout(bus: *mut IBusBus) -> gboolean;
-    pub fn ibus_bus_get_use_global_engine(bus: *mut IBusBus) -> gboolean;
-    pub fn ibus_bus_is_global_engine_enabled(bus: *mut IBusBus) -> gboolean;
     pub fn ibus_bus_get_global_engine(bus: *mut IBusBus) -> *mut IBusEngineDesc;
     pub fn ibus_bus_set_global_engine(bus: *mut IBusBus, global_engine: *const gchar) -> gboolean;
     pub fn ibus_bus_set_watch_dbus_signal(bus: *mut IBusBus, watch: gboolean);
