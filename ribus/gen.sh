@@ -30,4 +30,4 @@ bindgen \
 	--no-doc-comments \
 	-- \
 	--std=c99 \
-	$(pkg-config --cflags ibus-1.0)
+	$(pkg-config --cflags-only-I ibus-1.0)
