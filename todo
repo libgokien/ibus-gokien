@@ -1,7 +1,5 @@
 # Triage
 
-### use tracing-journald to log to systemd-journal
-
 ### Install and test with log
   ```bash
   ibus read-config
@@ -16,10 +14,7 @@
   ibus engine gokien
   ```
 
-### Bugs
-
-* wwww -> w unchanged
-  won't fix: change input method
+### Known bugs
 
 ### hard features
 

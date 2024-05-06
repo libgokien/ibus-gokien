@@ -18,9 +18,9 @@ bindgen \
 	--allowlist-function 'g_list_free' \
 	--allowlist-type 'IBus.*' \
 	--allowlist-var 'IBUS_KEY_([0-9a-zA-Z]{1}|Control.*|Tab|Return.*|Delete|Home|KP_.*|Back.*|Insert|Hyper.*|Shift.*|Caps.*|space|asciitilde)' \
-	--blocklist-type 'gsize|_?IBus(Serializable|Keymap|Panel|HotkeyProfile|ExtensionEvent|XEvent|Registry|Unicode|Emoji).*' \
+	--blocklist-type 'gsize|_?IBus(Serializable|Keymap|Panel|HotkeyProfile|ExtensionEvent|XEvent|Registry|Unicode|Emoji|ProcessKeyEventData).*' \
 	--blocklist-type '_?(GAsyncResult|GCancellable|GAsyncReadyCallback)' \
-	--blocklist-function 'ibus_.*async.*' \
+	--blocklist-function 'ibus_(.*async.*|bus_set_global_shortcut_keys)' \
 	--no-prepend-enum-name \
 	--rustified-enum 'IBusBusNameFlag' \
 	--default-macro-constant-type=unsigned \

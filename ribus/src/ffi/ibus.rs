@@ -676,13 +676,6 @@ pub struct _IBusConfigService {
 pub struct _IBusConfigServiceClass {
     pub _bindgen_opaque_blob: [u64; 49usize],
 }
-pub type IBusProcessKeyEventData = _IBusProcessKeyEventData;
-#[repr(C)]
-#[repr(align(4))]
-#[derive(Debug, Copy, Clone)]
-pub struct _IBusProcessKeyEventData {
-    pub _bindgen_opaque_blob: [u32; 3usize],
-}
 extern "C" {
     pub fn g_list_free(list: *mut GList);
     pub fn ibus_init();
