@@ -8,10 +8,7 @@ license.workspace = true
 [dependencies]
 ribus.workspace = true
 tracing.workspace = true
-
-[dependencies.vi]
-version = "0.5.1"
-# path = "../../vi-rs"
+vi.workspace = true
 
 [dev-dependencies]
 tracing-subscriber.workspace = true

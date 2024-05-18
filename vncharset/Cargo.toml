@@ -6,9 +6,7 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-
-[dependencies.vi]
-version = "0.5.1"
+vi.workspace = true
 
 [lints]
 workspace = true

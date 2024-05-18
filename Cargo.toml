@@ -21,6 +21,10 @@ tracing-subscriber = "0.3.18"
 version = "0.1"
 path = "ribus"
 
+[workspace.dependencies.vi]
+version = "0.5.1"
+path = "../vi-rs"
+
 [workspace.lints.clippy]
 match_like_matches_macro = "allow"
 new_without_default = "allow"
