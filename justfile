@@ -39,14 +39,13 @@ build:
 run $RUST_LOG='info':
   #!/bin/bash
   set -eux
-  just xml || true
+  export RUST_BACKTRACE=1
   cargo run --profile={{profile}} --package ibus-gokien
 
 [confirm]
 xml:
   sed "{{replace}}" {{xml_name}}.in > {{xml_name}}
 
-[confirm]
 ffi:
   bash ./ribus/gen.sh
 
