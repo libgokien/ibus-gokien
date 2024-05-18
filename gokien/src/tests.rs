@@ -11,17 +11,19 @@ fn main() {
 fn test_vi_whole_word() {
     let mut out = String::new();
     // (intput, expected)
-    let cases = [("wwawww", "wawww")];
+    #[rustfmt::skip]
+    let cases = [
+        ("ww", "ww"),
+        ("www", "www"),
+        ("wwawww", "wwawww"),
+        ("waf", "ừa"),
+        ("wwaos", "wwaos"),
+        ("wwwwwa", "wwwwwa"),
+        ("wwww", "wwww")
+    ];
     for (word, expected) in cases.into_iter() {
         transform_buffer(word.chars(), &mut out);
         assert_eq!(*expected, out);
-        out.clear();
-    }
-    // expected to fail tests
-    let cases = [("wwwwwa", "wwwa"), ("wwwww", "www")];
-    for (word, expected) in cases.into_iter() {
-        transform_buffer(word.chars(), &mut out);
-        assert_ne!(*expected, out);
         out.clear();
     }
 }
@@ -33,8 +35,8 @@ fn process_keys() {
     #[rustfmt::skip]
     let cases = [
         ("nghieengx\n", "nghiễng"),
-        ("wwawww\n", "wawww"),
-        ("wwww\n", "www")
+        ("wwawww\n", "wwawww"),
+        ("wwww\n", "wwww")
     ];
     for (word, expected) in cases.into_iter() {
         for ch in word.chars() {

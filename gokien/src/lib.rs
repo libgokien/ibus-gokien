@@ -102,14 +102,6 @@ impl GokienEngine {
                         let ch = char::from(keyval as u8);
                         self.buffer.push(ch);
                         self.output.clear();
-                        // XXX(#36): workaround bugs in vi-rs made www -> w
-                        if let [w, head @ .., tail] = &*self.buffer {
-                            if *w == 'w' && head.iter().all(|c| *c == 'w') {
-                                self.output.extend(head);
-                                self.output.push(*tail);
-                                return true;
-                            }
-                        }
                         self.translate()
                     }
                     // non processed keys
