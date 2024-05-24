@@ -23,7 +23,6 @@ impl Drop for EngineIter {
 impl Iterator for EngineIter {
     type Item = super::EngineDesc;
 
-    // Required method
     fn next(&mut self) -> Option<Self::Item> {
         if self.p.is_null() {
             return None;
