@@ -23,10 +23,10 @@ jobs:
       - name: install just
         run: |
           set -x
-          # create ~/bin
-          mkdir -p ~/bin
-          curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to ~/bin
-          export PATH="$PATH:$HOME/bin"
+          mkdir -p $HOME/bin
+          mkdir just && cd just
+          wget --quiet https://just.systems/install.sh
+          bash +x ./install.sh --to ~/bin
           echo "$HOME/bin" >> $GITHUB_PATH
       - name: Install bindgen
         run: |
@@ -36,7 +36,7 @@ jobs:
           URL_ROOT=https://github.com/rust-lang/rust-bindgen/releases/download/v0.69.4
           BINDGEN_TAR=bindgen-cli-x86_64-unknown-linux-gnu.tar.xz
           SHA256_FILE=${BINDGEN_TAR}.sha256
-          wget "$URL_ROOT/$BINDGEN_TAR" -O bindgen_cli.tar.xz
+          wget --quiet "$URL_ROOT/$BINDGEN_TAR" -O bindgen_cli.tar.xz
           tar -xf  ./bindgen_cli.tar.xz --strip-components=1
           echo "$(pwd)" >> $GITHUB_PATH
         shell: bash
