@@ -6,7 +6,7 @@ use std::mem;
 
 use ribus::c::{self, guint};
 use tracing::{debug, error};
-use vi::telex::transform_buffer;
+use vi::transform_buffer;
 
 // account for incorrect typos
 const MAX_CHARS_IN_WORD: usize = "nghieengz".len().next_power_of_two();
@@ -122,7 +122,7 @@ impl GokienEngine {
         }
 
         let buffer = self.buffer.iter().cloned();
-        transform_buffer(buffer, &mut self.output);
+        transform_buffer(&vi::TELEX, buffer, &mut self.output);
         true
     }
 

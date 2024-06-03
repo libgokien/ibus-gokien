@@ -1,5 +1,7 @@
 # Triage
 
+# rewrite vi::Word with char?
+
 ### Install and test with log
   ```bash
   ibus read-config

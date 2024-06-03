@@ -1,4 +1,6 @@
-use super::{transform_buffer, GokienEngine};
+use vi::transform_buffer;
+
+use super::GokienEngine;
 
 #[test]
 fn main() {
@@ -22,7 +24,7 @@ fn test_vi_whole_word() {
         ("wwww", "wwww")
     ];
     for (word, expected) in cases.into_iter() {
-        transform_buffer(word.chars(), &mut out);
+        transform_buffer(&vi::TELEX, word.chars(), &mut out);
         assert_eq!(*expected, out);
         out.clear();
     }
