@@ -46,6 +46,7 @@ jobs:
           set -x
           just --yes ffi
           git diff --exit-code
+      - run: cargo fetch
       - run: just build
       - run: cargo test
       - run: cd vncharset && cargo test
