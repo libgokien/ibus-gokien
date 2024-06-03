@@ -15,13 +15,13 @@ fn test_vi_whole_word() {
     // (intput, expected)
     #[rustfmt::skip]
     let cases = [
-        ("ww", "ww"),
-        ("www", "www"),
-        ("wwawww", "wwawww"),
-        ("waf", "ừa"),
-        ("wwaos", "wwaos"),
-        ("wwwwwa", "wwwwwa"),
-        ("wwww", "wwww")
+        ("ww",      "w"),
+        ("www",     "ww"),
+        ("wwawww",  "wawww"),
+        ("waf",     "ừa"),
+        ("wwaos",   "waos"),
+        ("wwwwwa",  "wwwwa"),
+        ("wwww",    "www")
     ];
     for (word, expected) in cases.into_iter() {
         transform_buffer(&vi::TELEX, word.chars(), &mut out);
@@ -37,8 +37,8 @@ fn process_keys() {
     #[rustfmt::skip]
     let cases = [
         ("nghieengx\n", "nghiễng"),
-        ("wwawww\n", "wwawww"),
-        ("wwww\n", "wwww")
+        ("wwawww\n",    "wawww"),
+        ("wwww\n",      "www")
     ];
     for (word, expected) in cases.into_iter() {
         for ch in word.chars() {
