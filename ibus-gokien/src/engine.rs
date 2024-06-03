@@ -8,7 +8,7 @@ use gobject_sys::{g_type_class_peek_parent, g_type_is_a, g_type_register_static_
 use gokien::{GokienEngine, State};
 use ribus::c::{self, gboolean, guint, GType, FALSE, TRUE};
 use ribus::{g_type_from_class, g_type_from_instance, IBusEngine, IBusEngineClass};
-use tracing::{debug, error};
+use tracing::{debug, error, instrument};
 
 macro_rules! ibus_engine_class {
     ($class:expr) => {{
@@ -197,15 +197,13 @@ impl IBusGokienEngineClass {
 }
 
 impl IEngine for IBusGokienEngine {
+    #[instrument(level = "debug", skip(engine, _kcode))]
     unsafe extern "C" fn process_key_event(
         engine: *mut IBusEngine,
         ksym: guint,
         _kcode: guint,
         state: guint,
     ) -> gboolean {
-        debug!("IBusGokienEngine::process_key_event");
-        // debug!(?ksym, ?state);
-
         let gokien = Self::assert_is_self(engine);
 
         if gokien.disabled {

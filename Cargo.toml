@@ -23,7 +23,7 @@ path = "ribus"
 
 [workspace.dependencies.vi]
 version = "0.7"
-path = "../vi-rs"
+# path = "../vi-rs"
 
 [workspace.lints.clippy]
 match_like_matches_macro = "allow"
