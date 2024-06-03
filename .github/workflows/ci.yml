@@ -7,12 +7,14 @@ on:
       - '!gh-pages'
   pull_request:
 
+env:
+  CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
+
 jobs:
   build:
     runs-on: ubuntu-latest
     env:
       RUST_BACKTRACE: 1
-      CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
     steps:
       - uses: actions/checkout@v4
       - name: Install C deps
@@ -47,11 +49,11 @@ jobs:
       - run: just build
       - run: cargo test
       - run: cd vncharset && cargo test
+
   msrv:
     runs-on: ubuntu-latest
     if: false
     env:
-      CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
       # add_of_mut! requires for soundness
       MSRV: 1.51.0
     steps:
@@ -74,11 +76,8 @@ jobs:
       - run: cargo fmt --all -- --check
 
   clippy:
-    if: false
     runs-on: ubuntu-latest
     needs: [build]
-    env:
-      CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
     steps:
       - uses: actions/checkout@v4
       - run: |

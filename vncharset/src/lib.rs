@@ -105,11 +105,8 @@ fn viqr_inner(word: &mut String, state: &mut State, b: u8) {
                 *state = InWord;
             } else if let Some(tone) = maybe_letter_modifier(b) {
                 let _ = word.pop();
-                match modify_letter(word, &tone) {
-                    Ignored => {
-                        word.push(b as char);
-                    }
-                    _ => {}
+                if modify_letter(word, &tone) == Ignored {
+                    word.push(b as char);
                 }
             } else if is_vowel(b) {
             } else if is_A_z(b) {
@@ -149,7 +146,7 @@ impl<'a> Viqr<'a> {
                 WaitingModifier => {}
                 Escaping => {}
                 Finished => {
-                    out.push_str(&*word);
+                    out.push_str(&word);
                     word.clear();
                     state = InWord;
                 }
@@ -233,7 +230,7 @@ impl<'a> Vni<'a> {
                         },
                     }
                     if !in_word {
-                        out.push_str(&*word);
+                        out.push_str(&word);
                         word.clear();
                         in_word = true;
                     }

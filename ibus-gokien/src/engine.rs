@@ -319,7 +319,7 @@ impl IEngine for IBusGokienEngine {
     ) {
         debug!("[*] IBusGokienEngine::set_surrounding_text");
         let text = c::ibus_text_get_text(text);
-        let text = CStr::from_ptr(text);
+        let text = core::ffi::CStr::from_ptr(text);
         debug!(?text, cursor_index, anchor_pos);
     }
 }
