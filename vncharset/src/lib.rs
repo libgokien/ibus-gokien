@@ -6,13 +6,6 @@ use vi::word::Word;
 
 const MAX_CHAR_IN_VNWORD: usize = "nghieeng".len().next_power_of_two();
 
-pub trait SingleByteCharset {}
-pub trait DoubleByteCharset {}
-
-impl SingleByteCharset for Tcvn3<'_> {}
-impl SingleByteCharset for Viscii<'_> {}
-impl DoubleByteCharset for Vni<'_> {}
-
 pub struct Viqr<'a>(&'a [u8]);
 
 #[derive(Debug)]
