@@ -73,8 +73,8 @@ struct IBusGokienEngineClass {
 }
 
 impl IBusGokienEngine {
+    #[instrument(level = "trace", skip_all)]
     unsafe extern "C" fn init(this: *mut GTypeInstance, g_class: *mut c_void) {
-        debug!("IBusGokienEngine::init");
         debug!(?this, ?g_class);
         Self::is_self(this.cast());
         let this = this.cast::<Self>();
@@ -114,8 +114,8 @@ impl IBusGokienEngine {
         })
     }
 
+    #[instrument(level = "trace", skip_all)]
     fn update_preedit(&mut self, engine: *mut IBusEngine) {
-        debug!("update_preedit");
         let Some(s) = self.core.take_output_as_cstr() else {
             unsafe {
                 c::ibus_engine_hide_preedit_text(engine);
@@ -131,8 +131,8 @@ impl IBusGokienEngine {
         self.core.replace_output_by_cstr(s);
     }
 
+    #[instrument(level = "trace", skip_all)]
     fn commit_preedit(&mut self, engine: *mut IBusEngine) {
-        debug!("commit_preedit");
         let Some(s) = self.core.take_output_as_cstr() else {
             return;
         };
@@ -156,8 +156,8 @@ impl IBusGokienEngine {
 impl IBusGokienEngineClass {
     // virtual function overrides go here
     // property and signal definitions go here
+    #[instrument(level = "trace", skip_all)]
     unsafe extern "C" fn init(class: *mut c_void, _class_data: *mut c_void) {
-        debug!("IBusGokienEngineClass::init");
         debug!(?class, ?_class_data);
 
         IBusGokienEngine::is_class(class.cast());
@@ -240,8 +240,8 @@ impl IEngine for IBusGokienEngine {
         }
     }
 
+    #[instrument(level = "trace", skip_all)]
     unsafe extern "C" fn focus_in(engine: *mut IBusEngine) {
-        debug!("IBusGokienEngine::focus_in");
         let gokien = Self::assert_is_self(engine);
 
         let disabled = ribus::Engine::should_be_disable(engine);
@@ -261,8 +261,8 @@ impl IEngine for IBusGokienEngine {
         (*PARENT_CLASS.get()).focus_in.map(|f| f(engine));
     }
 
+    #[instrument(level = "trace", skip_all)]
     unsafe extern "C" fn focus_out(engine: *mut IBusEngine) {
-        debug!("IBusGokienEngine::focus_out");
         let gokien = Self::assert_is_self(engine);
         gokien.commit_preedit(engine);
         gokien.core.reset();
@@ -270,21 +270,21 @@ impl IEngine for IBusGokienEngine {
         (*PARENT_CLASS.get()).focus_out.map(|f| f(engine));
     }
 
+    #[instrument(level = "trace", skip_all)]
     unsafe extern "C" fn reset(engine: *mut IBusEngine) {
-        debug!("IBusGokienEngine::reset");
         let gokien = Self::assert_is_self(engine);
         gokien.core.reset();
         (*PARENT_CLASS.get()).reset.map(|f| f(engine));
     }
 
+    #[instrument(level = "trace", skip_all)]
     unsafe extern "C" fn set_content_type(engine: *mut IBusEngine, purpose: guint, _hints: guint) {
-        debug!("IBusGokienEngine::set_content_type");
         let gokien = Self::assert_is_self(engine);
         gokien.disabled = ribus::Engine::invalid_input_context(purpose);
     }
 
+    #[instrument(level = "trace", skip_all)]
     unsafe extern "C" fn set_capabilities(_engine: *mut IBusEngine, caps: guint) {
-        debug!("IBusGokienEngine::set_capabilities");
         // some terminal emulators don't have preedit.
         let _has_preedit_text = caps & c::IBUS_CAP_PREEDIT_TEXT != 0;
         // almost all clients shall be able to be focused.
@@ -301,8 +301,8 @@ impl IEngine for IBusGokienEngine {
         }
     }
 
+    #[instrument(level = "trace", skip_all)]
     unsafe extern "C" fn enable(engine: *mut IBusEngine) {
-        debug!("IBusGokienEngine::enable");
         // > It is also used to tell the input-context that the engine will utilize surrounding-text.
         // > In that case, it must be called in "enable" handler, with both text and cursor set to NULL.
         c::ibus_engine_get_surrounding_text(engine, ptr::null_mut(), ptr::null_mut(), ptr::null_mut());
@@ -310,6 +310,7 @@ impl IEngine for IBusGokienEngine {
 
     // FIXME: this function cannot receive anything from clients.
     //        At least tested in firefox and sublimetext on pop-os.
+    #[instrument(level = "trace", skip_all)]
     #[cfg(feature = "surrounding_text")]
     unsafe extern "C" fn set_surrounding_text(
         _engine: *mut IBusEngine,
@@ -317,7 +318,6 @@ impl IEngine for IBusGokienEngine {
         cursor_index: guint,
         anchor_pos: guint,
     ) {
-        debug!("[*] IBusGokienEngine::set_surrounding_text");
         let text = c::ibus_text_get_text(text);
         let text = core::ffi::CStr::from_ptr(text);
         debug!(?text, cursor_index, anchor_pos);
