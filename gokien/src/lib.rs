@@ -6,7 +6,26 @@ use std::mem;
 
 use ribus::c::{self, guint};
 use tracing::{debug, error};
-use vi::transform_buffer;
+use vi::processor::{LetterModification, ToneMark};
+use vi::Action;
+
+pub static SIMPLE_TELEX: vi::Definition = phf::phf_map! {
+    's' => &[Action::AddTonemark(ToneMark::Acute)],
+    'f' => &[Action::AddTonemark(ToneMark::Grave)],
+    'r' => &[Action::AddTonemark(ToneMark::HookAbove)],
+    'x' => &[Action::AddTonemark(ToneMark::Tilde)],
+    'j' => &[Action::AddTonemark(ToneMark::Underdot)],
+    'a' => &[Action::ModifyLetterOnCharacterFamily(LetterModification::Circumflex, 'a')],
+    'e' => &[Action::ModifyLetterOnCharacterFamily(LetterModification::Circumflex, 'e')],
+    'o' => &[Action::ModifyLetterOnCharacterFamily(LetterModification::Circumflex, 'o')],
+    'w' => &[Action::ModifyLetter(LetterModification::Horn), Action::ModifyLetter(LetterModification::Breve)],
+    'd' => &[Action::ModifyLetter(LetterModification::Dyet)],
+    'z' => &[Action::RemoveToneMark],
+};
+
+pub fn transform_buffer(chars: &[char], out: &mut String) -> vi::TransformResult {
+    vi::transform_buffer(&SIMPLE_TELEX, chars.iter().copied(), out)
+}
 
 // account for incorrect typos
 const MAX_CHARS_IN_WORD: usize = "nghieengz".len().next_power_of_two();
@@ -121,8 +140,7 @@ impl GokienEngine {
             return false;
         }
 
-        let buffer = self.buffer.iter().cloned();
-        transform_buffer(&vi::TELEX, buffer, &mut self.output);
+        transform_buffer(&self.buffer, &mut self.output);
         true
     }
 

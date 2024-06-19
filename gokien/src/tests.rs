@@ -37,8 +37,8 @@ fn process_keys() {
     #[rustfmt::skip]
     let cases = [
         ("nghieengx\n", "nghiễng"),
-        ("wwawww\n",    "wawww"),
-        ("wwww\n",      "www")
+        ("wwawww\n",    "wwawww"),
+        ("wwww\n",      "wwww")
     ];
     for (word, expected) in cases.into_iter() {
         for ch in word.chars() {
