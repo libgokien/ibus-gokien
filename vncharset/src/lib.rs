@@ -75,7 +75,7 @@ fn add_tone(in_word: &mut String, tone: &ToneMark) {
 fn viqr_inner(word: &mut String, state: &mut State, b: u8) {
     use vi::editing::add_tone_char;
     use State::*;
-    use Transformation::*;
+    use Transformation::Ignored ;
     word.push(b as char);
     match state {
         InWord => {
@@ -116,7 +116,7 @@ fn viqr_inner(word: &mut String, state: &mut State, b: u8) {
             word.push(ch);
             *state = Finished;
         }
-        _ => {}
+        Finished => {}
     }
 }
 
@@ -135,9 +135,7 @@ impl<'a> Viqr<'a> {
         for &b in self.0 {
             viqr_inner(&mut word, &mut state, b);
             match state {
-                InWord => {}
-                WaitingModifier => {}
-                Escaping => {}
+                InWord | WaitingModifier | Escaping => {}
                 Finished => {
                     out.push_str(&word);
                     word.clear();
