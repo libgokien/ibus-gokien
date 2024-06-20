@@ -14,8 +14,11 @@ license = "GPLv3"
 
 [workspace.dependencies]
 gobject-sys = "0.19.0"
-tracing = "0.1.40"
 tracing-subscriber = "0.3.18"
+
+[workspace.dependencies.tracing]
+version = "0.1"
+features = ["max_level_debug", "release_max_level_warn"]
 
 [workspace.dependencies.ribus]
 version = "0.1"
