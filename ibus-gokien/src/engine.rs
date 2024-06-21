@@ -2,7 +2,7 @@ use core::ptr;
 use std::cell::Cell;
 use std::ffi::c_void;
 use std::mem::size_of;
-use std::sync::OnceLock;
+use std::sync::LazyLock;
 
 use gobject_sys::{g_type_class_peek_parent, g_type_is_a, g_type_register_static_simple, GTypeInstance};
 use gokien::{GokienEngine, State};
@@ -100,8 +100,7 @@ impl IBusGokienEngine {
     }
 
     pub fn get_type() -> GType {
-        static ID: OnceLock<GType> = OnceLock::new();
-        *ID.get_or_init(|| unsafe {
+        static ID: LazyLock<GType> = LazyLock::new(|| unsafe {
             g_type_register_static_simple(
                 /* parent_type */ ribus::Engine::get_type(),
                 /* type_name */ c"IBusGokienEngine".as_ptr(),
@@ -111,7 +110,8 @@ impl IBusGokienEngine {
                 /* instance_init */ Some(IBusGokienEngine::init),
                 /* flags */ 0,
             )
-        })
+        });
+        *ID
     }
 
     #[instrument(level = "trace", skip_all)]
@@ -217,7 +217,7 @@ impl IEngine for IBusGokienEngine {
                 gokien.update_preedit(engine);
             }
             State::PreeditCommitting => {
-                debug!("output = {}", gokien.core.get_output());
+                debug!(output = %gokien.core.get_output());
                 gokien.commit_preedit(engine);
                 gokien.core.state = State::Typing;
             }
