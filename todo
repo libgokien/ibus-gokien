@@ -3,37 +3,3 @@
 # reuse vi@0.7 for vncharset
 
 # rewrite vi::Word with char?
-
-### Install and test with log
-  ```bash
-  ibus read-config
-  env DCONF_PROFILE=ibus dconf read /desktop/ibus/general/preload-engines
-  ibus-setup
-  gsettings get org.gnome.desktop.input-sources sources
-  ```
-
-  Standalone:
-  ```
-  just run debug
-  ibus engine gokien
-  ```
-
-### Known bugs
-
-### hard features
-
-* surrounding_text: sometimes work in firefox textbox
-
-* emulate fake backspace: ibus_engine_forward_key_event
-  won't implement. too lazy and too much pain for that
-
-  https://github.com/BoGoEngine/ibus-bogo/issues/216
-
-#### Fcitx
-
-* Fcitx https://github.com/fcitx/fcitx5-unikey
-  + too MUCH c++. no c api. Rust can use cxx crate but no thanks.
-  + https://fcitx-im.org/wiki/Develop_an_simple_input_method
-  + https://codedocs.xyz/fcitx/fcitx5/group__FcitxCore.html
-  + apt download fcitx-core-dev
-  + can view source of fcitx5-bamboo and fcitx-unikey for API usage
