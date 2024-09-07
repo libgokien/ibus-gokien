@@ -3,7 +3,7 @@
 author := 'Lzu Tao'
 version := '0.1'
 sudo := 'false'
-real_sudo := if sudo == 'sudo' { 'sudo' } else { '' }
+real_sudo := if sudo != 'false' { 'sudo' } else { '' }
 
 profile := "dev"
 dest_dir := ''

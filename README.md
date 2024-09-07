@@ -6,16 +6,22 @@ at other input methods like VNI.
 ## Install and test with log
 
 ```bash
+just sudo=yes profile=release install
+```
+
+To run debug version:
+```bash
+just run debug
+# in another terminal
+ibus engine gokien
+```
+
+Other useful commands:
+```bash
 ibus read-config
 env DCONF_PROFILE=ibus dconf read /desktop/ibus/general/preload-engines
 ibus-setup
 gsettings get org.gnome.desktop.input-sources sources
-```
-
-Standalone:
-```
-just run debug
-ibus engine gokien
 ```
 
 ## Known bugs
