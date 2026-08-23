@@ -228,6 +228,9 @@ pub const IBUS_CAP_LOOKUP_TABLE: IBusCapabilite = 4;
 pub const IBUS_CAP_FOCUS: IBusCapabilite = 8;
 pub const IBUS_CAP_PROPERTY: IBusCapabilite = 16;
 pub const IBUS_CAP_SURROUNDING_TEXT: IBusCapabilite = 32;
+pub const IBUS_CAP_OSK: IBusCapabilite = 64;
+pub const IBUS_CAP_SYNC_PROCESS_KEY: IBusCapabilite = 128;
+pub const IBUS_CAP_SYNC_PROCESS_KEY_V2: IBusCapabilite = 128;
 pub type IBusCapabilite = ::core::ffi::c_uint;
 pub const IBUS_ENGINE_PREEDIT_CLEAR: IBusPreeditFocusMode = 0;
 pub const IBUS_ENGINE_PREEDIT_COMMIT: IBusPreeditFocusMode = 1;
@@ -512,7 +515,11 @@ pub struct _IBusEngineClass {
     pub cancel_hand_writing: ::core::option::Option<unsafe extern "C" fn(engine: *mut IBusEngine, n_strokes: guint)>,
     pub set_content_type:
         ::core::option::Option<unsafe extern "C" fn(engine: *mut IBusEngine, purpose: guint, hints: guint)>,
-    pub pdummy: [gpointer; 4usize],
+    pub focus_in_id: ::core::option::Option<
+        unsafe extern "C" fn(engine: *mut IBusEngine, object_path: *const gchar, client: *const gchar),
+    >,
+    pub focus_out_id: ::core::option::Option<unsafe extern "C" fn(engine: *mut IBusEngine, object_path: *const gchar)>,
+    pub pdummy: [gpointer; 2usize],
 }
 pub type IBusFactory = _IBusFactory;
 pub type IBusFactoryClass = _IBusFactoryClass;
@@ -651,6 +658,10 @@ pub struct _IBusBusPrivate {
     _unused: [u8; 0],
 }
 pub type IBusBusPrivate = _IBusBusPrivate;
+pub const IBUS_BUS_GLOBAL_BINDING_TYPE_ANY: IBusBusGlobalBindingType = 0;
+pub const IBUS_BUS_GLOBAL_BINDING_TYPE_IME_SWITCHER: IBusBusGlobalBindingType = 1;
+pub const IBUS_BUS_GLOBAL_BINDING_TYPE_EMOJI_TYPING: IBusBusGlobalBindingType = 2;
+pub type IBusBusGlobalBindingType = ::core::ffi::c_uint;
 #[repr(C)]
 #[repr(align(8))]
 #[derive(Debug, Copy, Clone)]
@@ -855,6 +866,7 @@ extern "C" {
     pub fn ibus_bus_preload_engines(bus: *mut IBusBus, names: *const *const gchar) -> gboolean;
     pub fn ibus_bus_get_ibus_property(bus: *mut IBusBus, property_name: *const gchar) -> *mut GVariant;
     pub fn ibus_bus_set_ibus_property(bus: *mut IBusBus, property_name: *const gchar, value: *mut GVariant);
+    pub fn ibus_bus_global_binding_type_get_type() -> GType;
     pub fn ibus_bus_name_flag_get_type() -> GType;
     pub fn ibus_bus_request_name_reply_get_type() -> GType;
     pub fn ibus_bus_start_service_by_name_reply_get_type() -> GType;
