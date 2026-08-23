@@ -1,12 +1,20 @@
 #[cfg(test)]
 mod tests;
 
-use vi::processor::{LetterModification, ToneMark, Transformation};
-use vi::word::Word;
+use vi::processor::{add_tone, modify_letter, AccentStyle, LetterModification, ToneMark, Transformation};
+use vi::syllable::Syllable;
 
-const MAX_CHAR_IN_VNWORD: usize = "nghieeng".len().next_power_of_two();
+// const MAX_CHAR_IN_VNWORD: usize = "nghieeng".len().next_power_of_two();
 
 pub struct Viqr<'a>(&'a [u8]);
+
+fn clear_syllable(word: &mut Syllable) {
+    word.initial_consonant.clear();
+    word.vowel.clear();
+    word.final_consonant.clear();
+    word.tone_mark = None;
+    word.letter_modifications.clear();
+}
 
 #[derive(Debug)]
 enum State {
@@ -55,54 +63,37 @@ fn maybe_letter_modifier(b: u8) -> Option<LetterModification> {
     Some(modifier)
 }
 
-fn modify_letter(in_word: &mut String, state: &LetterModification) -> Transformation {
-    use vi::processor::modify_letter;
-    let mut word = Word::empty();
-    word.set(in_word.clone());
-    let res = modify_letter(&mut word, state);
-    *in_word = word.to_string();
-    res
-}
-
-fn add_tone(in_word: &mut String, tone: &ToneMark) {
-    use vi::processor::add_tone;
-    let mut word = Word::empty();
-    word.set(in_word.clone());
-    add_tone(&mut word, tone);
-    *in_word = word.to_string();
-}
-
-fn viqr_inner(word: &mut String, state: &mut State, b: u8) {
-    use vi::editing::add_tone_char;
+fn viqr_inner(word: &mut Syllable, state: &mut State, b: u8) {
     use State::*;
     use Transformation::Ignored;
-    word.push(b as char);
     match state {
         InWord => {
             if is_vowel(b) || b == b'd' || b == b'D' {
                 // dbg!(b as char);
                 *state = WaitingModifier;
+                word.push(b as char);
             } else if b == b'\\' {
                 *state = Escaping;
             } else if is_A_z(b) {
+                word.push(b as char);
             } else {
                 *state = Finished;
             }
         }
         WaitingModifier => {
             if let Some(mark) = maybe_tone_mark(b) {
-                let _mark = word.pop();
-                let ch = word.pop().unwrap();
-                let new = add_tone_char(ch, &mark);
-                word.push(new);
+                if add_tone(word, &mark) == Ignored {
+                    word.push(b as char);
+                }
                 *state = InWord;
             } else if let Some(tone) = maybe_letter_modifier(b) {
-                let _ = word.pop();
                 if modify_letter(word, &tone) == Ignored {
                     word.push(b as char);
                 }
             } else if is_vowel(b) {
+                word.push(b as char);
             } else if is_A_z(b) {
+                word.push(b as char);
                 *state = InWord;
             } else if b == b'\\' {
                 *state = Escaping;
@@ -111,9 +102,6 @@ fn viqr_inner(word: &mut String, state: &mut State, b: u8) {
             }
         }
         Escaping => {
-            let ch = word.pop().unwrap();
-            let _ = word.pop();
-            word.push(ch);
             *state = Finished;
         }
         Finished => {}
@@ -126,10 +114,11 @@ impl<'a> Viqr<'a> {
     }
 
     #[track_caller]
-    pub fn encode_utf8(&self) -> String {
+    pub fn encode_utf8(&self, mode: AccentStyle) -> String {
         use State::*;
         let mut out = String::with_capacity(self.0.len());
-        let mut word = String::with_capacity(MAX_CHAR_IN_VNWORD);
+        let mut word = Syllable::default();
+        word.accent_style = mode;
         let mut state = InWord;
 
         for &b in self.0 {
@@ -137,8 +126,9 @@ impl<'a> Viqr<'a> {
             match state {
                 InWord | WaitingModifier | Escaping => {}
                 Finished => {
-                    out.push_str(&word);
-                    word.clear();
+                    out.push_str(&word.to_string());
+                    out.push(b as char);
+                    clear_syllable(&mut word);
                     state = InWord;
                 }
             }
@@ -169,6 +159,8 @@ impl<'a> Vni<'a> {
     }
 
     pub fn encode_utf8(&self, version: VniVariant) -> String {
+        use LetterModification::*;
+        use ToneMark::*;
         use VniVariant::*;
         let mut out = String::with_capacity(self.0.len());
         match version {
@@ -179,53 +171,75 @@ impl<'a> Vni<'a> {
                     out.push(ch);
                 }
             }
+            // https://en.wikipedia.org/wiki/VNI#VNI_Encoding_(Windows/Unix)
             AnsiWin => {
-                let mut word = String::with_capacity(MAX_CHAR_IN_VNWORD);
+                let mut word = Syllable::default();
                 let mut in_word = true;
                 for &b in self.0 {
                     match b {
                         0..=0xbf => {
-                            word.push(b as char);
-                            match b {
-                                b' ' | b'.' | b',' | b'\\' | b'~' => in_word = false,
-                                _ => {}
+                            if [b' ', b'.', b',', b'\\', b'~'].contains(&b) {
+                                in_word = false;
+                            } else {
+                                word.push(b as char);
                             }
                         }
-                        0xc6 => word.push('\u{1EC8}'),
-                        0xce => word.push('\u{1EF4}'),
-                        0xd1 => word.push('\u{0110}'),
-                        0xd2 => word.push('\u{1ECA}'),
-                        0xd3 => word.push('\u{0128}'),
-                        0xd4 => word.push('\u{01A0}'),
-                        0xd6 => word.push('\u{01AF}'),
-                        // lowercase
-                        0xe6 => word.push('\u{1EC9}'),
-                        0xee => word.push('\u{1EF5}'),
-                        0xf1 => word.push('\u{0111}'),
-                        0xf2 => word.push('\u{1ECB}'),
-                        0xf3 => word.push('\u{0129}'),
-                        0xf4 => word.push('\u{01A1}'),
-                        0xf6 => word.push('\u{01B0}'),
-                        _ => match vni::maybe_tone_mark(b) {
+                        // '\u{1EC8}'
+                        0xc6 | 0xe6 => {
+                            word.push(if b == 0xc6 { 'I' } else { 'i' });
+                            let _m = add_tone(&mut word, &HookAbove);
+                        }
+                        // '\u{1EF4}'
+                        0xce | 0xee => {
+                            word.push(if b == 0xce { 'Y' } else { 'y' });
+                            let _m = add_tone(&mut word, &Underdot);
+                        }
+                        // '\u{0110}'
+                        0xd1 | 0xf1 => {
+                            word.push(if b == 0xd1 { 'D' } else { 'd' });
+                            let _m = modify_letter(&mut word, &Dyet);
+                        }
+                        // '\u{1ECA}'
+                        0xd2 | 0xf2 => {
+                            word.push(if b == 0xd2 { 'I' } else { 'i' });
+                            let _m = add_tone(&mut word, &Underdot);
+                        }
+                        // '\u{0128}'
+                        0xd3 | 0xf3 => {
+                            word.push(if b == 0xd3 { 'I' } else { 'i' });
+                            let _m = add_tone(&mut word, &Tilde);
+                        }
+                        // '\u{01A0}'
+                        0xd4 | 0xf4 => {
+                            word.push(if b == 0xd4 { 'O' } else { 'o' });
+                            let _m = modify_letter(&mut word, &Horn);
+                        }
+                        // '\u{01AF}'
+                        0xd6 | 0xf6 => {
+                            word.push(if b == 0xd6 { 'U' } else { 'u' });
+                            let _m = modify_letter(&mut word, &Horn);
+                        }
+                        _ => match dbg!(vni::maybe_tone_mark(b)) {
                             (None, None) => word.push(b as char),
                             (Some(tone), Some(mody)) => {
-                                modify_letter(&mut word, &mody);
-                                add_tone(&mut word, &tone);
+                                let _m = modify_letter(&mut word, &mody);
+                                let _m = add_tone(&mut word, &tone);
                             }
                             (Some(tone), None) => {
-                                add_tone(&mut word, &tone);
+                                let _m = add_tone(&mut word, &tone);
                             }
                             (None, Some(mody)) => {
-                                modify_letter(&mut word, &mody);
+                                let _m = modify_letter(&mut word, &mody);
                             }
                         },
                     }
                     if !in_word {
-                        out.push_str(&word);
-                        word.clear();
+                        // dbg!(&word);
+                        out.push_str(&word.to_string());
+                        out.push(b as char);
+                        clear_syllable(&mut word);
                         in_word = true;
                     }
-                    dbg!(&out);
                 }
             }
             Mac => {
