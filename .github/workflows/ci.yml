@@ -81,6 +81,11 @@ jobs:
     needs: [build]
     steps:
       - uses: actions/checkout@v7
+      - name: Install C deps
+        run: |
+          set -x
+          sudo apt-get install libibus-1.0-dev
+        shell: bash
       - run: |
           rustup toolchain install nightly -c clippy
           rustup default nightly
