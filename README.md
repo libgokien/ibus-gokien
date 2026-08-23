@@ -6,6 +6,7 @@ at other input methods like VNI.
 ## Install and test with log
 
 ```bash
+apt install libibus-1.0-dev
 just sudo=yes profile=release install
 ```
 
