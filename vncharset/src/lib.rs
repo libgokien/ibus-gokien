@@ -2,7 +2,6 @@
 mod tests;
 
 use vi::processor::{LetterModification, ToneMark, Transformation};
-use vi::word::Word;
 
 const MAX_CHAR_IN_VNWORD: usize = "nghieeng".len().next_power_of_two();
 
@@ -57,19 +56,13 @@ fn maybe_letter_modifier(b: u8) -> Option<LetterModification> {
 
 fn modify_letter(in_word: &mut String, state: &LetterModification) -> Transformation {
     use vi::processor::modify_letter;
-    let mut word = Word::empty();
-    word.set(in_word.clone());
-    let res = modify_letter(&mut word, state);
-    *in_word = word.to_string();
+    let res = modify_letter(in_word, state);
     res
 }
 
 fn add_tone(in_word: &mut String, tone: &ToneMark) {
     use vi::processor::add_tone;
-    let mut word = Word::empty();
-    word.set(in_word.clone());
-    add_tone(&mut word, tone);
-    *in_word = word.to_string();
+    add_tone(in_word, tone);
 }
 
 fn viqr_inner(word: &mut String, state: &mut State, b: u8) {
