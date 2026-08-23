@@ -27,7 +27,7 @@ version = "0.1"
 path = "ribus"
 
 [workspace.dependencies.vi]
-version = "0.7"
+version = "0.8"
 # path = "../vi-rs"
 
 [workspace.lints.clippy]
