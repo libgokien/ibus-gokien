@@ -117,8 +117,7 @@ impl<'a> Viqr<'a> {
     pub fn encode_utf8(&self, mode: AccentStyle) -> String {
         use State::*;
         let mut out = String::with_capacity(self.0.len());
-        let mut word = Syllable::default();
-        word.accent_style = mode;
+        let mut word = Syllable { accent_style: mode, .. Default::default() };
         let mut state = InWord;
 
         for &b in self.0 {
@@ -178,7 +177,7 @@ impl<'a> Vni<'a> {
                 for &b in self.0 {
                     match b {
                         0..=0xbf => {
-                            if [b' ', b'.', b',', b'\\', b'~'].contains(&b) {
+                            if b" .,\\~".contains(&b) {
                                 in_word = false;
                             } else {
                                 word.push(b as char);
