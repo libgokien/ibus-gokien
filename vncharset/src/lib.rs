@@ -117,7 +117,10 @@ impl<'a> Viqr<'a> {
     pub fn encode_utf8(&self, mode: AccentStyle) -> String {
         use State::*;
         let mut out = String::with_capacity(self.0.len());
-        let mut word = Syllable { accent_style: mode, .. Default::default() };
+        let mut word = Syllable {
+            accent_style: mode,
+            ..Default::default()
+        };
         let mut state = InWord;
 
         for &b in self.0 {
