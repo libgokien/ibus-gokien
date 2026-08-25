@@ -1,5 +1,6 @@
 # Triage
 
-# reuse vi@0.7 for vncharset
+- why & for add_tone ?
+- could use [u8] instead of String in Syllable ?
 
-# rewrite vi::Word with char?
+# reuse vi@0.7 for vncharset

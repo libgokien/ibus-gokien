@@ -79,8 +79,8 @@ impl IBusGokienEngine {
         Self::is_self(this.cast());
         let this = this.cast::<Self>();
         // SAFETY: this.core should be dangling since zero-initilizing by gobject
-        ptr::addr_of_mut!((*this).core).write(GokienEngine::new());
-        ptr::addr_of_mut!((*this).disabled).write(false);
+        (&raw mut (*this).core).write(GokienEngine::new());
+        (&raw mut (*this).disabled).write(false);
         // how to use g_class?
         Self::is_class(g_class.cast());
     }
