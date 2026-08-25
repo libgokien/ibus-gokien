@@ -6,8 +6,8 @@ use std::mem;
 
 use ribus::c::{self, guint};
 use tracing::{debug, error};
-use vi::processor::{LetterModification, ToneMark};
 use vi::Action;
+use vi::processor::{LetterModification, ToneMark};
 
 pub static SIMPLE_TELEX: vi::Definition = phf::phf_map! {
     's' => &[Action::AddTonemark(ToneMark::Acute)],

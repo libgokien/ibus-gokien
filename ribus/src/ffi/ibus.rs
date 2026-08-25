@@ -687,7 +687,7 @@ pub struct _IBusConfigService {
 pub struct _IBusConfigServiceClass {
     pub _bindgen_opaque_blob: [u64; 49usize],
 }
-extern "C" {
+unsafe extern "C" {
     pub fn g_list_free(list: *mut GList);
     pub fn ibus_init();
     pub fn ibus_main();

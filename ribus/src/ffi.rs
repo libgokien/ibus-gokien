@@ -4,7 +4,7 @@
 #![allow(clippy::pedantic)]
 
 #[link(name = "ibus-1.0")]
-extern "C" {}
+unsafe extern "C" {}
 
 #[rustfmt::skip]
 pub mod ibus;

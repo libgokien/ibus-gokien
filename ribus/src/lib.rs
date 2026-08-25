@@ -13,7 +13,7 @@ use tracing::{error, info};
 
 #[macro_export]
 macro_rules! g_type_from_class {
-    ($class:expr) => {
+    ($class:expr_2021) => {
         (*($class as *const gobject_sys::GTypeClass)).g_type
     };
 }

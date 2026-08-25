@@ -1,4 +1,4 @@
-use crate::c::{g_list_free, GList};
+use crate::c::{GList, g_list_free};
 
 #[derive(Debug)]
 pub struct EngineIter {

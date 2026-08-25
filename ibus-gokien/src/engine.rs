@@ -4,16 +4,14 @@ use std::ffi::c_void;
 use std::mem::size_of;
 use std::sync::LazyLock;
 
-use gobject_sys::{g_type_class_peek_parent, g_type_is_a, g_type_register_static_simple, GTypeInstance};
+use gobject_sys::{GTypeInstance, g_type_class_peek_parent, g_type_is_a, g_type_register_static_simple};
 use gokien::{GokienEngine, State};
-use ribus::c::{self, gboolean, guint, GType, FALSE, TRUE};
-use ribus::{g_type_from_class, g_type_from_instance, IBusEngine, IBusEngineClass};
+use ribus::c::{self, FALSE, GType, TRUE, gboolean, guint};
+use ribus::{IBusEngine, IBusEngineClass, g_type_from_class, g_type_from_instance};
 use tracing::{debug, error, instrument};
 
 macro_rules! ibus_engine_class {
-    ($class:expr) => {{
-        gobject_sys::g_type_check_class_cast($class, ribus::Engine::get_type())
-    }};
+    ($class:expr_2021) => {{ gobject_sys::g_type_check_class_cast($class, ribus::Engine::get_type()) }};
 }
 
 trait IEngine {
@@ -75,14 +73,16 @@ struct IBusGokienEngineClass {
 impl IBusGokienEngine {
     #[instrument(level = "trace", skip_all)]
     unsafe extern "C" fn init(this: *mut GTypeInstance, g_class: *mut c_void) {
-        debug!(?this, ?g_class);
-        Self::is_self(this.cast());
-        let this = this.cast::<Self>();
-        // SAFETY: this.core should be dangling since zero-initilizing by gobject
-        (&raw mut (*this).core).write(GokienEngine::new());
-        (&raw mut (*this).disabled).write(false);
-        // how to use g_class?
-        Self::is_class(g_class.cast());
+        unsafe {
+            debug!(?this, ?g_class);
+            Self::is_self(this.cast());
+            let this = this.cast::<Self>();
+            // SAFETY: this.core should be dangling since zero-initilizing by gobject
+            (&raw mut (*this).core).write(GokienEngine::new());
+            (&raw mut (*this).disabled).write(false);
+            // how to use g_class?
+            Self::is_class(g_class.cast());
+        }
     }
 
     fn is_self(this: *mut Self) {
@@ -158,41 +158,43 @@ impl IBusGokienEngineClass {
     // property and signal definitions go here
     #[instrument(level = "trace", skip_all)]
     unsafe extern "C" fn init(class: *mut c_void, _class_data: *mut c_void) {
-        debug!(?class, ?_class_data);
+        unsafe {
+            debug!(?class, ?_class_data);
 
-        IBusGokienEngine::is_class(class.cast());
-        let class = class.cast::<Self>();
+            IBusGokienEngine::is_class(class.cast());
+            let class = class.cast::<Self>();
 
-        let parent: *mut IBusEngineClass = g_type_class_peek_parent(class.cast()).cast();
-        ribus::Engine::is_class(parent.cast());
-        PARENT_CLASS.set(parent);
+            let parent: *mut IBusEngineClass = g_type_class_peek_parent(class.cast()).cast();
+            ribus::Engine::is_class(parent.cast());
+            PARENT_CLASS.set(parent);
 
-        // virtual function overrides go here
+            // virtual function overrides go here
 
-        // NOTE: `parent` should be let untouched to get default impl
-        let engine_class: *mut IBusEngineClass = ibus_engine_class!(class.cast()).cast();
-        let parent = &mut *engine_class;
-        parent.process_key_event.replace(IBusGokienEngine::process_key_event);
-        parent.focus_in.replace(IBusGokienEngine::focus_in);
-        parent.focus_out.replace(IBusGokienEngine::focus_out);
-        parent.reset.replace(IBusGokienEngine::reset);
-        parent.set_content_type.replace(IBusGokienEngine::set_content_type);
-        parent.enable.replace(IBusGokienEngine::enable);
-        parent.set_capabilities.replace(IBusGokienEngine::set_capabilities);
-        #[cfg(feature = "surrounding_text")]
-        parent
-            .set_surrounding_text
-            .replace(IBusGokienEngine::set_surrounding_text);
+            // NOTE: `parent` should be let untouched to get default impl
+            let engine_class: *mut IBusEngineClass = ibus_engine_class!(class.cast()).cast();
+            let parent = &mut *engine_class;
+            parent.process_key_event.replace(IBusGokienEngine::process_key_event);
+            parent.focus_in.replace(IBusGokienEngine::focus_in);
+            parent.focus_out.replace(IBusGokienEngine::focus_out);
+            parent.reset.replace(IBusGokienEngine::reset);
+            parent.set_content_type.replace(IBusGokienEngine::set_content_type);
+            parent.enable.replace(IBusGokienEngine::enable);
+            parent.set_capabilities.replace(IBusGokienEngine::set_capabilities);
+            #[cfg(feature = "surrounding_text")]
+            parent
+                .set_surrounding_text
+                .replace(IBusGokienEngine::set_surrounding_text);
 
-        // let g_class: *mut GObjectClass = class.cast();
-        // HACK: constructor nonsense: <https://docs.gtk.org/gobject/concepts.html#object-instantiation>
-        // (*g_class).constructor = Some(IBusGokienEngine::constructor);
-        // If you need to perform object initialization steps after
-        // all construct properties have been set.
-        // (*g_class).constructed = Some(IBusGokienEngine::constructed);
-        // (*g_class).finalize = Some(IBusGokienEngine::finalize);
-        // let io_class: *mut ribus::ObjectClass = class.cast();
-        // (*io_class).destroy = Some(42);
+            // let g_class: *mut GObjectClass = class.cast();
+            // HACK: constructor nonsense: <https://docs.gtk.org/gobject/concepts.html#object-instantiation>
+            // (*g_class).constructor = Some(IBusGokienEngine::constructor);
+            // If you need to perform object initialization steps after
+            // all construct properties have been set.
+            // (*g_class).constructed = Some(IBusGokienEngine::constructed);
+            // (*g_class).finalize = Some(IBusGokienEngine::finalize);
+            // let io_class: *mut ribus::ObjectClass = class.cast();
+            // (*io_class).destroy = Some(42);
+        }
     }
 }
 
@@ -204,83 +206,89 @@ impl IEngine for IBusGokienEngine {
         _kcode: guint,
         state: guint,
     ) -> gboolean {
-        let gokien = Self::assert_is_self(engine);
+        unsafe {
+            let gokien = Self::assert_is_self(engine);
 
-        if gokien.disabled {
-            return FALSE;
-        }
+            if gokien.disabled {
+                return FALSE;
+            }
 
-        let processed = gokien.core.process_key(ksym, state);
+            let processed = gokien.core.process_key(ksym, state);
 
-        match gokien.core.state {
-            State::Typing => {
-                gokien.update_preedit(engine);
+            match gokien.core.state {
+                State::Typing => {
+                    gokien.update_preedit(engine);
+                }
+                State::PreeditCommitting => {
+                    debug!(output = %gokien.core.get_output());
+                    gokien.commit_preedit(engine);
+                    gokien.core.state = State::Typing;
+                }
+                State::Interrupting => {
+                    gokien.commit_preedit(engine);
+                    // FIXME: maybe we want to disable TELEX here
+                }
+                State::Backspacing => {
+                    gokien.core.state = State::Typing;
+                    let ok = gokien.core.handle_backspace();
+                    gokien.update_preedit(engine);
+                    return if ok { TRUE } else { FALSE };
+                }
             }
-            State::PreeditCommitting => {
-                debug!(output = %gokien.core.get_output());
-                gokien.commit_preedit(engine);
-                gokien.core.state = State::Typing;
-            }
-            State::Interrupting => {
-                gokien.commit_preedit(engine);
-                // FIXME: maybe we want to disable TELEX here
-            }
-            State::Backspacing => {
-                gokien.core.state = State::Typing;
-                let ok = gokien.core.handle_backspace();
-                gokien.update_preedit(engine);
-                return if ok { TRUE } else { FALSE };
-            }
-        }
 
-        if processed {
-            TRUE
-        } else {
-            FALSE
+            if processed { TRUE } else { FALSE }
         }
     }
 
     #[instrument(level = "trace", skip_all)]
     unsafe extern "C" fn focus_in(engine: *mut IBusEngine) {
-        let gokien = Self::assert_is_self(engine);
+        unsafe {
+            let gokien = Self::assert_is_self(engine);
 
-        let disabled = ribus::Engine::should_be_disable(engine);
-        debug!(?disabled);
-        gokien.disabled = disabled;
+            let disabled = ribus::Engine::should_be_disable(engine);
+            debug!(?disabled);
+            gokien.disabled = disabled;
 
-        if cfg!(feature = "surrounding_text") {
-            let mut cursor_index = 0;
-            let mut anchor_pos = 0;
-            let mut text: *mut c::IBusText = ptr::null_mut();
-            c::ibus_engine_get_surrounding_text(engine, &mut text, &mut cursor_index, &mut anchor_pos);
-            let text = c::ibus_text_get_text(text);
-            let text = std::ffi::CStr::from_ptr(text);
-            debug!(?text, cursor_index, anchor_pos);
+            if cfg!(feature = "surrounding_text") {
+                let mut cursor_index = 0;
+                let mut anchor_pos = 0;
+                let mut text: *mut c::IBusText = ptr::null_mut();
+                c::ibus_engine_get_surrounding_text(engine, &mut text, &mut cursor_index, &mut anchor_pos);
+                let text = c::ibus_text_get_text(text);
+                let text = std::ffi::CStr::from_ptr(text);
+                debug!(?text, cursor_index, anchor_pos);
+            }
+
+            (*PARENT_CLASS.get()).focus_in.map(|f| f(engine));
         }
-
-        (*PARENT_CLASS.get()).focus_in.map(|f| f(engine));
     }
 
     #[instrument(level = "trace", skip_all)]
     unsafe extern "C" fn focus_out(engine: *mut IBusEngine) {
-        let gokien = Self::assert_is_self(engine);
-        gokien.commit_preedit(engine);
-        gokien.core.reset();
-        c::ibus_engine_hide_preedit_text(engine);
-        (*PARENT_CLASS.get()).focus_out.map(|f| f(engine));
+        unsafe {
+            let gokien = Self::assert_is_self(engine);
+            gokien.commit_preedit(engine);
+            gokien.core.reset();
+            c::ibus_engine_hide_preedit_text(engine);
+            (*PARENT_CLASS.get()).focus_out.map(|f| f(engine));
+        }
     }
 
     #[instrument(level = "trace", skip_all)]
     unsafe extern "C" fn reset(engine: *mut IBusEngine) {
-        let gokien = Self::assert_is_self(engine);
-        gokien.core.reset();
-        (*PARENT_CLASS.get()).reset.map(|f| f(engine));
+        unsafe {
+            let gokien = Self::assert_is_self(engine);
+            gokien.core.reset();
+            (*PARENT_CLASS.get()).reset.map(|f| f(engine));
+        }
     }
 
     #[instrument(level = "trace", skip_all)]
     unsafe extern "C" fn set_content_type(engine: *mut IBusEngine, purpose: guint, _hints: guint) {
-        let gokien = Self::assert_is_self(engine);
-        gokien.disabled = ribus::Engine::invalid_input_context(purpose);
+        unsafe {
+            let gokien = Self::assert_is_self(engine);
+            gokien.disabled = ribus::Engine::invalid_input_context(purpose);
+        }
     }
 
     #[instrument(level = "trace", skip_all)]
@@ -303,9 +311,11 @@ impl IEngine for IBusGokienEngine {
 
     #[instrument(level = "trace", skip_all)]
     unsafe extern "C" fn enable(engine: *mut IBusEngine) {
-        // > It is also used to tell the input-context that the engine will utilize surrounding-text.
-        // > In that case, it must be called in "enable" handler, with both text and cursor set to NULL.
-        c::ibus_engine_get_surrounding_text(engine, ptr::null_mut(), ptr::null_mut(), ptr::null_mut());
+        unsafe {
+            // > It is also used to tell the input-context that the engine will utilize surrounding-text.
+            // > In that case, it must be called in "enable" handler, with both text and cursor set to NULL.
+            c::ibus_engine_get_surrounding_text(engine, ptr::null_mut(), ptr::null_mut(), ptr::null_mut());
+        }
     }
 
     // FIXME: this function cannot receive anything from clients.

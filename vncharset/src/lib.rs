@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests;
 
-use vi::processor::{add_tone, modify_letter, AccentStyle, LetterModification, ToneMark, Transformation};
+use vi::processor::{AccentStyle, LetterModification, ToneMark, Transformation, add_tone, modify_letter};
 use vi::syllable::Syllable;
 
 // const MAX_CHAR_IN_VNWORD: usize = "nghieeng".len().next_power_of_two();
