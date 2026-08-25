@@ -35,11 +35,9 @@ jobs:
           set -x
           mkdir bindgen && cd bindgen
           sudo apt-get install libclang1
-          URL_ROOT=https://github.com/rust-lang/rust-bindgen/releases/download/v0.69.4
-          BINDGEN_TAR=bindgen-cli-x86_64-unknown-linux-gnu.tar.xz
-          SHA256_FILE=${BINDGEN_TAR}.sha256
-          wget --quiet "$URL_ROOT/$BINDGEN_TAR" -O bindgen_cli.tar.xz
-          tar -xf  ./bindgen_cli.tar.xz --strip-components=1
+          URL_ROOT=https://github.com/tesuji/rust-bindgen/releases/download/v0.72.1/bindgen.tar.gz
+          wget --quiet "$URL_ROOT" -O bindgen_cli.tar.xz
+          tar -xf  ./bindgen_cli.tar.xz
           echo "$(pwd)" >> $GITHUB_PATH
         shell: bash
       - run: |
@@ -55,8 +53,7 @@ jobs:
     runs-on: ubuntu-latest
     if: false
     env:
-      # add_of_mut! requires for soundness
-      MSRV: 1.51.0
+      MSRV: 1.92.0
     steps:
       - uses: actions/checkout@v7
       - run: |
