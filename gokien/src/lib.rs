@@ -117,7 +117,8 @@ impl GokienEngine {
                         true
                     }
                     // telex only
-                    c::IBUS_KEY_A..=c::IBUS_KEY_Z | c::IBUS_KEY_a..=c::IBUS_KEY_z | c::IBUS_KEY_0..=c::IBUS_KEY_9 => {
+                    // VNI: what about me with `c::IBUS_KEY_0..=c::IBUS_KEY_9` ?
+                    c::IBUS_KEY_A..=c::IBUS_KEY_Z | c::IBUS_KEY_a..=c::IBUS_KEY_z => {
                         let ch = char::from(keyval as u8);
                         self.buffer.push(ch);
                         self.output.clear();
