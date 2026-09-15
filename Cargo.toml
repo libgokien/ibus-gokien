@@ -13,7 +13,10 @@ edition = "2024"
 license = "GPLv3"
 
 [workspace.dependencies]
-gobject-sys = "0.22.0"
+
+[workspace.dependencies.gobject-sys]
+version  = "0.22.0"
+features = ["v2_74"]
 
 [workspace.dependencies.tracing-subscriber]
 version = "0.3.18"
