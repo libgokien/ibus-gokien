@@ -328,8 +328,10 @@ impl IEngine for IBusGokienEngine {
         cursor_index: guint,
         anchor_pos: guint,
     ) {
-        let text = c::ibus_text_get_text(text);
-        let text = core::ffi::CStr::from_ptr(text);
+        let text = unsafe {
+            let text = c::ibus_text_get_text(text);
+            core::ffi::CStr::from_ptr(text)
+        };
         debug!(?text, cursor_index, anchor_pos);
     }
 }
