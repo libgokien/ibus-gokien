@@ -222,14 +222,15 @@ impl Engine {
     }
 
     pub fn as_ptr(&mut self) -> *mut IBusEngine {
-        &mut self.0 as _
+        &raw mut self.0
     }
 
     #[inline]
-    pub fn invalid_input_context(purpose: c::guint) -> bool {
+    pub const fn has_valid_input_context(purpose: c::guint) -> bool {
+        // NOTE: those contants are NOT power-of-two, so we cannot use masking
         match purpose {
-            c::IBUS_INPUT_PURPOSE_FREE_FORM | c::IBUS_INPUT_PURPOSE_ALPHA | c::IBUS_INPUT_PURPOSE_NAME => false,
-            _ => true,
+            c::IBUS_INPUT_PURPOSE_FREE_FORM | c::IBUS_INPUT_PURPOSE_ALPHA | c::IBUS_INPUT_PURPOSE_NAME => true,
+            _ => false,
         }
     }
 
@@ -240,6 +241,6 @@ impl Engine {
         unsafe {
             c::ibus_engine_get_content_type(engine, &mut purpose, &mut hints);
         }
-        Self::invalid_input_context(purpose)
+        !Self::has_valid_input_context(purpose)
     }
 }

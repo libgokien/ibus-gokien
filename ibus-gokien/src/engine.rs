@@ -62,7 +62,7 @@ pub struct IBusGokienEngine {
     pub parent: IBusEngine,
     /* members */
     core: GokienEngine,
-    disabled: bool,
+    enabled: bool,
 }
 
 #[repr(C)]
@@ -209,7 +209,7 @@ impl IEngine for IBusGokienEngine {
         unsafe {
             let gokien = Self::assert_is_self(engine);
 
-            if gokien.disabled {
+            if !gokien.enabled {
                 return FALSE;
             }
 
@@ -245,9 +245,9 @@ impl IEngine for IBusGokienEngine {
         unsafe {
             let gokien = Self::assert_is_self(engine);
 
-            let disabled = ribus::Engine::should_be_disable(engine);
-            debug!(?disabled);
-            gokien.disabled = disabled;
+            let enabled = !ribus::Engine::should_be_disable(engine);
+            debug!(?enabled);
+            gokien.enabled = enabled;
 
             if cfg!(feature = "surrounding_text") {
                 let mut cursor_index = 0;
@@ -287,7 +287,7 @@ impl IEngine for IBusGokienEngine {
     unsafe extern "C" fn set_content_type(engine: *mut IBusEngine, purpose: guint, _hints: guint) {
         unsafe {
             let gokien = Self::assert_is_self(engine);
-            gokien.disabled = ribus::Engine::invalid_input_context(purpose);
+            gokien.enabled = ribus::Engine::has_valid_input_context(purpose);
         }
     }
 
