@@ -68,7 +68,7 @@ impl GokienEngine {
 
     pub fn process_key(&mut self, keyval: guint, state: guint) -> bool {
         use State::*;
-        debug!(keyval = format_args!("0x{keyval:04x}"), state);
+        debug!(keyval = format_args!("0x{keyval:04x}"));
         // do not handle key released events, only consider key pressed ones
         if state & c::IBUS_RELEASE_MASK != 0 {
             return false;

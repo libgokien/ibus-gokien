@@ -71,18 +71,19 @@ struct IBusGokienEngineClass {
 }
 
 impl IBusGokienEngine {
-    #[instrument(level = "trace", skip_all)]
+    #[instrument(level = "trace")]
     unsafe extern "C" fn init(this: *mut GTypeInstance, g_class: *mut c_void) {
+        debug!(?this, ?g_class);
+        Self::is_self(this.cast());
+        let this = this.cast::<Self>();
+        let core = GokienEngine::new();
+        // SAFETY: this.core should be dangling since zero-initilizing by gobject
         unsafe {
-            debug!(?this, ?g_class);
-            Self::is_self(this.cast());
-            let this = this.cast::<Self>();
-            // SAFETY: this.core should be dangling since zero-initilizing by gobject
-            (&raw mut (*this).core).write(GokienEngine::new());
-            (&raw mut (*this).disabled).write(false);
-            // how to use g_class?
-            Self::is_class(g_class.cast());
+            (&raw mut (*this).core).write(core);
+            (&raw mut (*this).enabled).write(true);
         }
+        // how to use g_class?
+        Self::is_class(g_class.cast());
     }
 
     fn is_self(this: *mut Self) {
@@ -156,56 +157,55 @@ impl IBusGokienEngine {
 impl IBusGokienEngineClass {
     // virtual function overrides go here
     // property and signal definitions go here
-    #[instrument(level = "trace", skip_all)]
+    #[instrument(level = "trace")]
     unsafe extern "C" fn init(class: *mut c_void, _class_data: *mut c_void) {
-        unsafe {
-            debug!(?class, ?_class_data);
+        debug!(?class, ?_class_data);
+        IBusGokienEngine::is_class(class.cast());
+        let class = class.cast::<Self>();
 
-            IBusGokienEngine::is_class(class.cast());
-            let class = class.cast::<Self>();
+        let parent: *mut IBusEngineClass = unsafe { g_type_class_peek_parent(class.cast()).cast() };
+        ribus::Engine::is_class(parent.cast());
+        PARENT_CLASS.set(parent);
 
-            let parent: *mut IBusEngineClass = g_type_class_peek_parent(class.cast()).cast();
-            ribus::Engine::is_class(parent.cast());
-            PARENT_CLASS.set(parent);
-
-            // virtual function overrides go here
-
+        // virtual function overrides go here
+        let parent = unsafe {
             // NOTE: `parent` should be let untouched to get default impl
             let engine_class: *mut IBusEngineClass = ibus_engine_class!(class.cast()).cast();
-            let parent = &mut *engine_class;
-            parent.process_key_event.replace(IBusGokienEngine::process_key_event);
-            parent.focus_in.replace(IBusGokienEngine::focus_in);
-            parent.focus_out.replace(IBusGokienEngine::focus_out);
-            parent.reset.replace(IBusGokienEngine::reset);
-            parent.set_content_type.replace(IBusGokienEngine::set_content_type);
-            parent.enable.replace(IBusGokienEngine::enable);
-            parent.set_capabilities.replace(IBusGokienEngine::set_capabilities);
-            #[cfg(feature = "surrounding_text")]
-            parent
-                .set_surrounding_text
-                .replace(IBusGokienEngine::set_surrounding_text);
+            &mut *engine_class
+        };
+        parent.process_key_event.replace(IBusGokienEngine::process_key_event);
+        parent.focus_in.replace(IBusGokienEngine::focus_in);
+        parent.focus_out.replace(IBusGokienEngine::focus_out);
+        parent.reset.replace(IBusGokienEngine::reset);
+        parent.set_content_type.replace(IBusGokienEngine::set_content_type);
+        parent.enable.replace(IBusGokienEngine::enable);
+        parent.set_capabilities.replace(IBusGokienEngine::set_capabilities);
+        #[cfg(feature = "surrounding_text")]
+        parent
+            .set_surrounding_text
+            .replace(IBusGokienEngine::set_surrounding_text);
 
-            // let g_class: *mut GObjectClass = class.cast();
-            // HACK: constructor nonsense: <https://docs.gtk.org/gobject/concepts.html#object-instantiation>
-            // (*g_class).constructor = Some(IBusGokienEngine::constructor);
-            // If you need to perform object initialization steps after
-            // all construct properties have been set.
-            // (*g_class).constructed = Some(IBusGokienEngine::constructed);
-            // (*g_class).finalize = Some(IBusGokienEngine::finalize);
-            // let io_class: *mut ribus::ObjectClass = class.cast();
-            // (*io_class).destroy = Some(42);
-        }
+        // let g_class: *mut GObjectClass = class.cast();
+        // HACK: constructor nonsense: <https://docs.gtk.org/gobject/concepts.html#object-instantiation>
+        // (*g_class).constructor = Some(IBusGokienEngine::constructor);
+        // If you need to perform object initialization steps after
+        // all construct properties have been set.
+        // (*g_class).constructed = Some(IBusGokienEngine::constructed);
+        // (*g_class).finalize = Some(IBusGokienEngine::finalize);
+        // let io_class: *mut ribus::ObjectClass = class.cast();
+        // (*io_class).destroy = Some(42);
     }
 }
 
 impl IEngine for IBusGokienEngine {
-    #[instrument(level = "debug", skip(engine, _kcode))]
+    #[instrument(level = "debug", skip_all)]
     unsafe extern "C" fn process_key_event(
         engine: *mut IBusEngine,
         ksym: guint,
         _kcode: guint,
         state: guint,
     ) -> gboolean {
+        debug!(ksym = format_args!("{ksym:#x}"), state = format_args!("{state:#x}"));
         unsafe {
             let gokien = Self::assert_is_self(engine);
 
